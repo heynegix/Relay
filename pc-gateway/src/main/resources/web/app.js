@@ -385,12 +385,12 @@
 
   async function loadOfficial() {
     const info = await api("/api/official-info", { headers: authHeaders() });
-    $("officialAlert").textContent = info.urgent ? `気象庁: ${info.warningHeadline}` : `公式情報: ${info.warningHeadline}`;
+    $("officialAlert").textContent = info.urgent ? `公式情報: ${info.warningHeadline}` : `公式情報: ${info.warningHeadline}`;
     $("officialAlert").classList.toggle("urgent", info.urgent);
-    $("warningDetail").innerHTML = `<h3>気象庁 警報・注意報</h3><p>${escapeHtml(info.warningHeadline)}</p><ul>${info.warningStatuses.map((value) => `<li>${escapeHtml(value)}</li>`).join("") || "<li>設定地域の発表状況なし</li>"}</ul><p class="fine">確認 ${fmtTime(info.checkedAtEpochMillis)}${info.usedCachedWarning ? "（保存済み情報）" : ""}${escapeHtml(provenanceLabel(info.provenance))}</p>`;
+    $("warningDetail").innerHTML = `<h3>公式情報</h3><p>${escapeHtml(info.warningHeadline)}</p><ul>${info.warningStatuses.map((value) => `<li>${escapeHtml(value)}</li>`).join("") || "<li>発表状況なし</li>"}</ul><p class="fine">確認 ${fmtTime(info.checkedAtEpochMillis)}${info.usedCachedWarning ? "（保存済み情報）" : ""}${escapeHtml(provenanceLabel(info.provenance))}</p>`;
     $("officialSources").innerHTML = info.sources.map((source) => `<a class="source-card" href="${escapeHtml(source.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(source.title)}</strong><span>${escapeHtml(source.organization)} 公式サイト</span></a>`).join("");
     if (info.urgent && !state.notifiedWarning && "Notification" in window && Notification.permission === "granted") {
-      new Notification("Relay 設定地域 公式警報", { body: info.warningHeadline }); state.notifiedWarning = true;
+      new Notification("Relay official alert", { body: info.warningHeadline }); state.notifiedWarning = true;
     }
   }
 

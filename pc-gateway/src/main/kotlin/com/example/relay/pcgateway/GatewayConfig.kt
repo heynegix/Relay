@@ -5,6 +5,7 @@ import com.example.relay.rescue.beaconFingerprintBytes
 import java.io.File
 import java.net.InetAddress
 import java.net.URI
+import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.UUID

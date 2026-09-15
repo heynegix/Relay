@@ -93,7 +93,9 @@ class RelayApplication : Application() {
         }
     }
     val diagnostics: RelayDiagnosticStore by lazy { RelayDiagnosticStore(this) }
-    val regionalDeploymentProfile: AndroidRegionalDeploymentProfile by lazy { AndroidRegionalDeploymentProfile.load(this) }
+    val regionalDeploymentProfile: AndroidRegionalDeploymentProfile by lazy {
+        AndroidRegionalDeploymentProfile.load(this)
+    }
 
     val database: RelayDatabase by lazy {
         System.loadLibrary("sqlcipher")

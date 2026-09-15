@@ -1,3 +1,4 @@
+@file:Suppress("MagicNumber", "MaxLineLength")
 package com.example.relay.regional
 
 import android.content.Context

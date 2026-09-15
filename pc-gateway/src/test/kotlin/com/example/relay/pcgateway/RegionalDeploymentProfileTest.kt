@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package com.example.relay.pcgateway
 
 import java.nio.file.Files

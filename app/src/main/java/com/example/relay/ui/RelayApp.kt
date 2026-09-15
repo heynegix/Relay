@@ -1,3 +1,4 @@
+@file:Suppress("FunctionNaming")
 package com.example.relay.ui
 
 import android.app.Activity

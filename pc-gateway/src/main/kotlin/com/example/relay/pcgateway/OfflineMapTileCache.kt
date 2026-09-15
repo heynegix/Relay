@@ -1,3 +1,4 @@
+@file:Suppress("MagicNumber", "MaxLineLength", "ReturnCount")
 package com.example.relay.pcgateway
 
 import java.net.URI

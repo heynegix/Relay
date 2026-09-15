@@ -1,3 +1,4 @@
+@file:Suppress("MaxLineLength")
 package com.example.relay.broker
 
 import com.example.relay.rescue.EncryptedRescueEnvelope

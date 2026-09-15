@@ -1,3 +1,4 @@
+@file:Suppress("MagicNumber", "MaxLineLength")
 package com.example.relay.pcgateway
 
 import com.example.relay.pcgateway.official.CapAlertParser

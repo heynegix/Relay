@@ -39,7 +39,7 @@ data class OfflineMapStatus(
     val attribution: String = "Configured map provider",
 )
 
-class OfflineMapTileCache(
+open class OfflineMapTileCache(
     private val root: Path,
     private val profile: RegionalMapProfile = RegionalMapProfile(),
     private val regionId: String = "global",
@@ -122,3 +122,27 @@ class OfflineMapTileCache(
         fun latY(v:Double,z:Int):Int { val c=v.coerceIn(-85.05112878,85.05112878); val r=c*PI/180.0; return floor((1.0-ln(tan(r)+1.0/cos(r))/PI)/2.0*(1 shl z)).toInt().coerceIn(0,(1 shl z)-1) }
     }
 }
+
+/**
+ * Compatibility facade for callers compiled against the pre-profile map API.
+ * It uses bounded synthetic defaults and never embeds a real deployment location.
+ */
+@Deprecated("Use OfflineMapTileCache with RegionalMapProfile")
+class GsiTileCache(root: Path) : OfflineMapTileCache(
+    root = root,
+    profile = RegionalMapProfile(
+        enabled = true,
+        initialLatitude = 0.0,
+        initialLongitude = 0.0,
+        initialZoom = 15,
+        south = -1.0,
+        north = 1.0,
+        west = -1.0,
+        east = 1.0,
+        minZoom = 13,
+        maxNativeZoom = 15,
+        maxZoom = 18,
+        tileTemplate = "https://tiles.example.invalid/{z}/{x}/{y}.png",
+        attribution = "Configured map provider",
+    ),
+)

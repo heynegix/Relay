@@ -20,7 +20,7 @@
 
 > [!CAUTION]
 > **Relay does not replace 119, fire departments, police, municipalities, or any official emergency communication channel.**
-> Relay is currently a development-stage project intended for personal development, evacuation drills, limited collaborative pilots, and technical validation. A UI state such as “saved,” “relaying,” or “received” does **not** guarantee emergency dispatch, responder acknowledgement, or rescue.
+> Relay is currently a development-stage project intended for development, evacuation drills, limited collaborative pilots, and technical validation. A UI state such as “saved,” “relaying,” or “received” does **not** guarantee emergency dispatch, responder acknowledgement, or rescue.
 
 ---
 
@@ -28,7 +28,7 @@
 
 During a large-scale disaster, **a smartphone may still work while internet access or cellular infrastructure becomes unstable or unavailable**.
 
-Relay is designed to avoid depending on a single transport path. Instead, it attempts to move encrypted rescue information through whichever supported path is available.
+Relay avoids relying on a single transport path. Instead, it is designed to move encrypted rescue information through whichever supported route is available.
 
 ```mermaid
 flowchart LR
@@ -46,7 +46,7 @@ flowchart LR
 Relay is built around three principles:
 
 - **Local-first** — use multiple available paths, including Nearby and LAN, instead of assuming internet connectivity.
-- **Encrypted relay** — rescue content is encrypted on Android; relay devices and the Broker are not intended to decrypt the payload.
+- **Encrypted relay** — rescue content is encrypted on Android; intermediate relay devices and the Broker are not intended to decrypt it.
 - **Honest delivery state** — a successful transport operation is not treated as proof that a rescue coordination point received the request.
 
 The goal is not to make communication *look* successful. The goal is to represent **how far a request has actually progressed** as honestly as possible.
@@ -64,8 +64,6 @@ The goal is not to make communication *look* successful. The goal is to represen
 ## Project status
 
 Relay currently includes an Android application, a PC Gateway, an HTTPS Broker, local drill/pilot features, and automated security and quality checks.
-
-However:
 
 > **Implemented ≠ tested on physical devices ≠ field-ready.**
 
@@ -85,13 +83,13 @@ The machine-readable source of truth for readiness is [`docs/readiness/status.ym
 
 <!-- BEGIN GENERATED: readiness-summary (tools/readiness/readiness_tool.py; edit docs/readiness/status.yml instead) -->
 > [!NOTE]
-> この節は `docs/readiness/status.yml`（唯一の正）から自動生成されます。手で編集しないでください。
+> This section is generated from `docs/readiness/status.yml`, the single source of truth. Do not edit it manually.
 >
-> **status基準: 2026-07-29 / commit `23bd1da` / branch `agent/zero-operation-relay`**
+> **Status basis: 2026-07-29 / commit `23bd1da` / branch `agent/zero-operation-relay`**
 >
-> 管理対象 50機能: 実装済み 46 / 未実装 3 / 自動試験済み 43 / emulator検証済み 1 / **実機検証済み 0 / 現地検証済み 0** / 外部判断待ちを含む 7
+> 50 tracked features: 46 implemented / 3 not implemented / 43 automatically tested / 1 emulator-tested / **0 device-tested / 0 field-tested** / 7 include external-decision blockers.
 >
-> IMPLEMENTEDやAUTOMATED_TESTEDはDEVICE_TESTED・FIELD_TESTEDを意味しません。全機能の軸別状態は [READINESS_TABLE](docs/readiness/READINESS_TABLE.md)、未完了項目は [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md)、自治体向け要約は [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) を参照してください。
+> `IMPLEMENTED` and `AUTOMATED_TESTED` do not imply `DEVICE_TESTED` or `FIELD_TESTED`. See [READINESS_TABLE](docs/readiness/READINESS_TABLE.md) for the full matrix, [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md) for unfinished work, and [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) for the municipal summary.
 <!-- END GENERATED: readiness-summary -->
 
 </details>
@@ -105,7 +103,7 @@ The machine-readable source of truth for readiness is [`docs/readiness/status.ym
 
 ### Run the local pilot on Windows
 
-After preparing the development environment, run the following from the repository root:
+From the repository root:
 
 ```powershell
 .\scripts\Start-Relay-Local-Pilot.ps1
@@ -325,8 +323,6 @@ APK reproducibility:
 ---
 
 ## What is still required before real-world operation
-
-The largest remaining areas are:
 
 1. **Physical-device and RF validation** — multiple Android devices, multi-hop Nearby, BLE, reboot behavior, Doze, battery-saving modes, battery usage, and thermal behavior.
 2. **Production trust data** — Regional Root, signed Shelter Directory data, Gateway keys, and fingerprint-verification procedures.

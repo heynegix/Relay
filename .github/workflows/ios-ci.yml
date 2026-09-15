@@ -17,7 +17,6 @@ on:
   push:
     branches:
       - main
-      - agent/zero-operation-relay
     paths:
       - 'apple/**'
       - 'composeApp/**'

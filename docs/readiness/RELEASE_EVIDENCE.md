@@ -4,7 +4,7 @@
 
 # Relay release evidence index
 
-Status date: **2026-07-29** / commit `23bd1da`
+Status date: **2026-09-16** / commit `3af3538`
 
 Evidence listed here proves only what its kind states. `source`/`test`/`script`/`workflow`/`doc` entries are automated or written evidence; only dated `external_record` entries can support DEVICE_TESTED / FIELD_TESTED claims.
 

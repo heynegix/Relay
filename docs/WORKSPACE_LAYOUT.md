@@ -16,17 +16,17 @@
 
 ## 入口
 
-- 開発状況と次の作業は [CODEX_HANDOFF.md](../artifacts/CODEX_HANDOFF.md)。
+- 開発環境と変更手順は [CONTRIBUTING.md](../CONTRIBUTING.md)、現在の優先事項は [ROADMAP.md](../ROADMAP.md)。
 - Relay の動作モデルは [OPERATION_MODEL.md](OPERATION_MODEL.md)。
 - PC Gateway の通常起動はリポジトリ直下の `Start-PC-Gateway.cmd`。詳細は [PC_GATEWAY_SETUP.md](PC_GATEWAY_SETUP.md)。
 
 ## 成果物の扱い
 
-`artifacts/` は配布物と作業時の証跡を同居させる互換領域である。既存の参照を壊さないため、現在の APK、EXE、ハッシュ、引き継ぎ資料は移動しない。
+`artifacts/` は配布物と検証時の証跡を置く領域である。個人の作業パス、端末の絶対パス、秘密情報を含む引き継ぎ資料は追跡しない。
 
 - 配布・共有が必要なファイルだけを追跡する。
 - 一時ログ、スモークテスト出力、パッチ、ローカル app-image は `.gitignore` に従い追跡しない。
-- 新しい検証記録は `artifacts/build-verify-YYYYMMDD.md`、引き継ぎ資料は `artifacts/CODEX_HANDOFF*.md` の命名を使う。
+- 新しい検証記録は `artifacts/build-verify-YYYYMMDD.md` の命名を使い、個人パスや秘密情報を含めない。
 
 ## 整理のルール
 

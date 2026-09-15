@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/NEGI46/Relay/docs/readiness/status.schema.json",
+  "$id": "https://github.com/heynegix/Relay/docs/readiness/status.schema.json",
   "title": "Relay readiness status single source of truth",
   "description": "Machine-readable readiness record. State axes are deliberately separate so that IMPLEMENTED can never be conflated with DEVICE_TESTED. DEVICE_TESTED and FIELD_TESTED additionally require dated external_record evidence (enforced here and cross-checked by tools/readiness/readiness_tool.py).",
   "type": "object",

@@ -1,8 +1,8 @@
 # Branch protection baseline (external decision required)
 
-This document records the branch protection settings Relay expects on
-`main` and `agent/zero-operation-relay`. Repository settings cannot be
-version-controlled, so applying them is an **owner action**; CI cannot verify
+This document records the branch protection settings Relay expects on `main`.
+Repository settings cannot be version-controlled, so applying them is an
+**owner action**; CI cannot verify
 them and this document does not claim they are active.
 
 ## Required settings
@@ -26,7 +26,7 @@ them and this document does not claim they are active.
   push protection (Settings → Code security). Gitleaks in CI is a second,
   independent layer.
 - **Private vulnerability reporting**: enable so external researchers can
-  report privately (see SECURITY policy work in later phases).
+  report privately (see [SECURITY.md](../../SECURITY.md)).
 - **Actions permissions**: restrict to actions pinned by the workflows;
   default workflow token permissions: read-only.
 
@@ -35,7 +35,7 @@ them and this document does not claim they are active.
 After applying, verify with:
 
 ```
-gh api repos/NEGI46/Relay/branches/agent/zero-operation-relay/protection
+gh api repos/heynegix/Relay/branches/main/protection
 ```
 
 Status tracking: `docs/readiness/status.yml` feature `branch-protection`

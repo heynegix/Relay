@@ -1,0 +1,40 @@
+name: Feature request
+description: Propose a scoped improvement that fits Relay's safety and readiness model.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature proposals must preserve honest delivery states and must not assume official emergency-service adoption.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What concrete user, operator, contributor, or validation problem would this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety, security, and privacy considerations
+      description: Include failure modes, data collected, trust changes, and readiness evidence needed.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Suggested scope and acceptance criteria
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

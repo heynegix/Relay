@@ -3,7 +3,7 @@ name: Security baseline
 on:
   pull_request:
   push:
-    branches: [main, agent/zero-operation-relay]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

@@ -1,4 +1,4 @@
-@file:Suppress("LongMethod", "CyclomaticComplexMethod")
+@file:Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList")
 package com.example.relay.pcgateway
 
 import com.example.relay.gateway.protocol.GATEWAY_PROTOCOL_VERSION

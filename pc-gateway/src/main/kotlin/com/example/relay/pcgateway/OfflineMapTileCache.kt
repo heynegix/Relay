@@ -1,4 +1,4 @@
-@file:Suppress("MagicNumber", "MaxLineLength", "ReturnCount")
+@file:Suppress("MagicNumber", "MaxLineLength", "ReturnCount", "TooGenericExceptionCaught")
 package com.example.relay.pcgateway
 
 import java.net.URI

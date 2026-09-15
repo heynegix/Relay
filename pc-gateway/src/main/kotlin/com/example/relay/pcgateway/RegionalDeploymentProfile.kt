@@ -66,7 +66,8 @@ data class RegionalMapProfile(
         }
         tileTemplate?.let {
             val uri = runCatching { URI(it.replace("{z}","0").replace("{x}","0").replace("{y}","0")) }.getOrNull()
-            require(uri?.scheme.equals("https", true) && !uri.host.isNullOrBlank() && uri.userInfo == null && uri.query == null && uri.fragment == null) {
+            require(uri != null && uri.scheme.equals("https", true) && !uri.host.isNullOrBlank() &&
+                uri.userInfo == null && uri.query == null && uri.fragment == null) {
                 "tileTemplate must be HTTPS without credentials or query parameters"
             }
         }

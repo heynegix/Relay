@@ -4,136 +4,136 @@
 
 # Relay
 
-### 通信が途切れても、救助情報をつなぐ。
+### Keep rescue information moving when connectivity fails.
 
-**Relayは、Android端末で暗号化した救助情報を、Nearby・LAN・HTTPS Brokerなど利用可能な経路で中継し、救助拠点側のPC Gatewayへ届けることを目指すオープンソースの災害時通信プロジェクトです。**
+**Relay is an open-source disaster-communication project that encrypts rescue information on Android devices and relays it through available paths — Nearby, local LAN, or an HTTPS Broker — toward a PC Gateway at a rescue coordination point.**
 
-[![Relay CI](https://github.com/NEGI46/Relay/actions/workflows/relay-ci.yml/badge.svg?branch=agent%2Fzero-operation-relay)](https://github.com/NEGI46/Relay/actions/workflows/relay-ci.yml)
-[![Android](https://img.shields.io/badge/Android-6.0%2B-3DDC84?logo=android&logoColor=white)](#開発環境)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.21-7F52FF?logo=kotlin&logoColor=white)](#開発環境)
+[![Relay CI](https://github.com/heynegix/Relay/actions/workflows/relay-ci.yml/badge.svg?branch=agent%2Fzero-operation-relay)](https://github.com/heynegix/Relay/actions/workflows/relay-ci.yml)
+[![Android](https://img.shields.io/badge/Android-6.0%2B-3DDC84?logo=android&logoColor=white)](#development-environment)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.21-7F52FF?logo=kotlin&logoColor=white)](#development-environment)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-development%20preview-F59E0B)](#現在の状態)
+[![Status](https://img.shields.io/badge/status-development%20preview-F59E0B)](#project-status)
 
-[30秒で理解](#30秒でわかるrelay) ・ [画面](#画面) ・ [現在の状態](#現在の状態) ・ [試す](#まず試す) ・ [仕組み](#relayの仕組み) ・ [検証](#検証) ・ [協力](#relayに協力する) ・ [資料](#主要ドキュメント)
+[Overview](#relay-in-30-seconds) · [Screenshots](#screenshots) · [Status](#project-status) · [Quick start](#quick-start) · [Architecture](#how-relay-works) · [Verification](#verification) · [Contributing](#contributing) · [Docs](#documentation)
 
 </div>
 
 > [!CAUTION]
-> **Relayは119、消防・警察・自治体の公式な緊急連絡手段を置き換えません。**
-> 現在は個人開発・避難訓練・限定的な共同実証・技術検証に向けた開発段階です。画面に「保存」「中継」「受信」などと表示されても、救助隊の出動や人命救助を保証するものではありません。
+> **Relay does not replace 119, fire departments, police, municipalities, or any official emergency communication channel.**
+> Relay is currently a development-stage project intended for development, evacuation drills, limited collaborative pilots, and technical validation. A UI state such as “saved,” “relaying,” or “received” does **not** guarantee emergency dispatch, responder acknowledgement, or rescue.
 
 ---
 
-## 30秒でわかるRelay
+## Relay in 30 seconds
 
-大規模災害では、**スマートフォン自体は動いていても、インターネットや基地局への接続が不安定になる**可能性があります。
+During a large-scale disaster, **a smartphone may still work while internet access or cellular infrastructure becomes unstable or unavailable**.
 
-Relayは、そのような状況でも情報を1本の通信経路だけに依存させず、使える経路を組み合わせて救助情報を運ぶことを目指しています。
+Relay avoids relying on a single transport path. Instead, it is designed to move encrypted rescue information through whichever supported route is available.
 
 ```mermaid
 flowchart LR
-    A[Androidで<br/>救助依頼を作成] --> E[端末内で暗号化]
-    E --> N[Nearby<br/>端末間中継]
-    E --> L[同一LAN<br/>Gatewayへ直接]
-    E --> B[HTTPS Broker<br/>経由]
+    A[Create rescue request<br/>on Android] --> E[Encrypt on device]
+    E --> N[Nearby<br/>device-to-device relay]
+    E --> L[Local LAN<br/>direct to Gateway]
+    E --> B[HTTPS Broker]
     N --> G[PC Gateway]
     L --> G
     B --> G
-    G --> R[署名済み<br/>Receipt]
+    G --> R[Signed<br/>Receipt]
     R --> A
 ```
 
-**ポイントは3つです。**
+Relay is built around three principles:
 
-- **Local-first** — インターネットだけに依存せず、NearbyやLANを含む複数経路を扱う
-- **Encrypted relay** — 救助本文はAndroid側で暗号化し、中継端末やBrokerは本文を復号しない
-- **Honest delivery state** — 「送信処理が成功した」と「救助拠点に届いた」を同じ意味として扱わない
+- **Local-first** — use multiple available paths, including Nearby and LAN, instead of assuming internet connectivity.
+- **Encrypted relay** — rescue content is encrypted on Android; intermediate relay devices and the Broker are not intended to decrypt it.
+- **Honest delivery state** — a successful transport operation is not treated as proof that a rescue coordination point received the request.
 
-Relayは「通信できた気がする」ことではなく、**どこまで届いたかを区別して扱うこと**を重視しています。
+The goal is not to make communication *look* successful. The goal is to represent **how far a request has actually progressed** as honestly as possible.
 
 ---
 
-## 画面
+## Screenshots
 
-| Androidホーム | 救助依頼 | 公式情報 |
+| Android home | Rescue request | Official information |
 |---|---|---|
 | <img src="docs/assets/relay-android-home.png" alt="Relay Android home" width="260"> | <img src="docs/assets/relay-android-rescue.png" alt="Relay rescue request" width="260"> | <img src="docs/assets/relay-android-official.png" alt="Relay official information" width="260"> |
 
 ---
 
-## 現在の状態
+## Project status
 
-RelayにはAndroidアプリ、PC Gateway、HTTPS Broker、訓練向けローカル実証機能、各種セキュリティ・品質検査が実装されています。
+Relay currently includes an Android application, a PC Gateway, an HTTPS Broker, local drill/pilot features, and automated security and quality checks.
 
-ただし、**実装済み = 実機で確認済み = 現地で使える、ではありません。**
+> **Implemented ≠ tested on physical devices ≠ field-ready.**
 
-| 領域 | 現在地 |
+| Area | Current state |
 |---|---|
-| Android救助フロー | 実装・自動試験あり。実Android端末での総合確認が必要 |
-| Nearby / LAN / Broker配送 | 実装・自動試験あり。複数実機・実電波環境・実回線での検証が必要 |
-| PC Gateway | staff画面、監査、署名Receipt、訓練機能、保存期間管理などを実装。現地運用は未検証 |
-| Gateway登録 | QR読取、貼付入力、fingerprint確認、明示的な鍵rotationを実装。実機・実LAN確認が必要 |
-| セキュリティ・品質 | CodeQL、秘密情報scan、依存関係検証、fuzz、API契約、負荷・障害系などの検査基盤あり |
-| 正式運用 | **未到達**。正式鍵、実機試験、運用責任者、本番インフラ、privacy・法務等の判断が必要 |
+| Android rescue flow | Implemented with automated tests. End-to-end validation on physical Android devices is still required. |
+| Nearby / LAN / Broker delivery | Implemented with automated tests. Multi-device, RF, and real-network validation is still required. |
+| PC Gateway | Staff UI, audit records, signed receipts, drill features, and retention handling are implemented. Field operation remains unvalidated. |
+| Gateway enrollment | QR scanning, pasted enrollment data, fingerprint confirmation, and explicit key rotation are implemented. Physical-device and real-LAN validation is required. |
+| Security & quality | Includes CodeQL, secret scanning, dependency verification, fuzzing, API contract tests, load tests, and failure-path testing. |
+| Production operation | **Not reached.** Production keys, physical-device validation, operational ownership, infrastructure, privacy review, and legal decisions are still required. |
 
-readinessの唯一の機械可読な正は [`docs/readiness/status.yml`](docs/readiness/status.yml) です。コードが更新されても、実機・現地検証の証拠がなければ自動的に`DEVICE_TESTED`や`FIELD_TESTED`にはなりません。
+The machine-readable source of truth for readiness is [`docs/readiness/status.yml`](docs/readiness/status.yml). Code changes do not automatically promote a feature to `DEVICE_TESTED` or `FIELD_TESTED` without corresponding evidence.
 
 <details>
-<summary><strong>readiness集計を表示</strong></summary>
+<summary><strong>Generated readiness snapshot</strong></summary>
 
 <!-- BEGIN GENERATED: readiness-summary (tools/readiness/readiness_tool.py; edit docs/readiness/status.yml instead) -->
 > [!NOTE]
-> この節は `docs/readiness/status.yml`（唯一の正）から自動生成されます。手で編集しないでください。
+> This section is generated from `docs/readiness/status.yml`, the single source of truth. Do not edit it manually.
 >
-> **status基準: 2026-07-29 / commit `23bd1da` / branch `agent/zero-operation-relay`**
+> **Status basis: 2026-07-29 / commit `23bd1da` / branch `agent/zero-operation-relay`**
 >
-> 管理対象 50機能: 実装済み 46 / 未実装 3 / 自動試験済み 43 / emulator検証済み 1 / **実機検証済み 0 / 現地検証済み 0** / 外部判断待ちを含む 7
+> 50 tracked features: 46 implemented / 3 not implemented / 43 automatically tested / 1 emulator-tested / **0 device-tested / 0 field-tested** / 7 include external-decision blockers.
 >
-> IMPLEMENTEDやAUTOMATED_TESTEDはDEVICE_TESTED・FIELD_TESTEDを意味しません。全機能の軸別状態は [READINESS_TABLE](docs/readiness/READINESS_TABLE.md)、未完了項目は [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md)、自治体向け要約は [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) を参照してください。
+> `IMPLEMENTED` and `AUTOMATED_TESTED` do not imply `DEVICE_TESTED` or `FIELD_TESTED`. See [READINESS_TABLE](docs/readiness/READINESS_TABLE.md) for the full matrix, [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md) for unfinished work, and [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) for the municipal summary.
 <!-- END GENERATED: readiness-summary -->
 
 </details>
 
 > [!IMPORTANT]
-> 現在のRelayは `DEVICE_TESTED`、`FIELD_READY`、`PILOT_READY`、`PRODUCTION_READY` を名乗れる段階ではありません。
+> Relay must **not** currently be described as `DEVICE_TESTED`, `FIELD_READY`, `PILOT_READY`, or `PRODUCTION_READY`.
 
 ---
 
-## まず試す
+## Quick start
 
-### Windowsでローカル実証を起動
+### Run the local pilot on Windows
 
-開発環境を用意したうえで、リポジトリ直下から次を実行します。
+From the repository root:
 
 ```powershell
 .\scripts\Start-Relay-Local-Pilot.ps1
 ```
 
-起動後:
+Then open:
 
-- 参加者向け受付: `http://127.0.0.1:8080/local-pilot`
-- staff console: `http://127.0.0.1:8080/`
+- Participant intake: `http://127.0.0.1:8080/local-pilot`
+- Staff console: `http://127.0.0.1:8080/`
 
-確認と停止:
+Validate and stop the local pilot with:
 
 ```powershell
 .\scripts\Test-Relay-Local-Pilot.ps1
 .\scripts\Stop-Relay-Local-Pilot.ps1
 ```
 
-LAN内の訓練端末から接続する場合だけ、明示的に`-AllowLan`を使用します。
+Only use `-AllowLan` when you explicitly want drill devices on the same LAN to connect:
 
 ```powershell
 .\scripts\Start-Relay-Local-Pilot.ps1 -AllowLan
 ```
 
 > [!WARNING]
-> ローカル実証機能、debug APK、unsigned installer、無料tunnel等は**開発・避難訓練・動作確認用**です。本番の緊急連絡用途には使用しないでください。
+> Local pilot features, debug APKs, unsigned installers, free tunnels, and similar development tools are for **development, drills, and validation only**. Do not use them as production emergency communication infrastructure.
 
-### Sourceからbuild
+### Build from source
 
 ```bash
-git clone https://github.com/NEGI46/Relay.git
+git clone https://github.com/heynegix/Relay.git
 cd Relay
 ```
 
@@ -149,130 +149,130 @@ Android APK:
 app/build/outputs/apk/localDev/app-localDev.apk
 ```
 
-Broker endpointを組み込む場合:
+To build with a Broker endpoint:
 
 ```powershell
 .\gradlew.bat :app:assembleLocalDev -Prelay.broker.endpoint=https://your-domain.example
 ```
 
-endpointにはHTTPSとhostが必要です。credentialをURLへ埋め込まないでください。
+The endpoint must use HTTPS and include a host. Do not embed credentials in the URL.
 
-モバイル回線経由のBroker検証は [HTTPS Broker deployment](deployment/broker/README.md) を参照してください。
+For Broker validation over a mobile network, see [HTTPS Broker deployment](deployment/broker/README.md).
 
 ---
 
-## Relayの仕組み
+## How Relay works
 
-### Androidアプリ
+### Android app
 
-- SOS / 通常の救助依頼を作成
-- 依頼の更新・取消・状態確認
-- 明示同意した場合のみ位置情報を更新
-- Room + SQLCipherとAndroid Keystoreによる暗号化保存
-- NearbyによるStore-Carry-Forward中継
-- 署名付きEnvelopeの更新認可と降格防止
-- QRまたは貼付入力によるPC Gateway登録
-- `ARMED` / `EMERGENCY_ACTIVE` / `DEGRADED`などの背景中継状態管理
+- Create SOS and standard rescue requests.
+- Update, cancel, and inspect request state.
+- Update location only after explicit user consent.
+- Store data using Room + SQLCipher and Android Keystore-backed protection.
+- Relay data using Nearby with a Store-Carry-Forward model.
+- Authorize signed Envelope updates and reject state downgrades.
+- Enroll a PC Gateway through QR scanning or pasted enrollment data.
+- Manage background relay states such as `ARMED`, `EMERGENCY_ACTIVE`, and `DEGRADED`.
 
 > [!NOTE]
-> `ARMED`はNearbyを常時動かしたり災害を自動検知したりする状態ではありません。待機設定を保持する状態です。
+> `ARMED` does not mean Nearby is continuously active or that Relay automatically detects disasters. It represents a stored standby configuration.
 
 ### PC Gateway
 
-- 個人staffアカウントと`ADMIN` / `OPERATOR` / `VIEWER`の権限分離
-- 救助依頼の受信、担当、対応中、完了、監査記録
-- 救助拠点が署名するReceipt
-- 案件更新時の担当状態引継ぎ
-- 位置情報が取得できない依頼の保存と、後からの同意済み更新
-- 公式情報の出典・取得経路・検証状態の表示
-- 保存期間に基づく個人・救助情報のretention管理
+- Individual staff accounts with `ADMIN`, `OPERATOR`, and `VIEWER` roles.
+- Receive, assign, process, complete, and audit rescue requests.
+- Issue Gateway-signed receipts.
+- Preserve assignment state across request updates.
+- Store requests without location and later accept consented location updates.
+- Display official-information provenance, acquisition path, and verification state.
+- Apply retention rules to personal and rescue information.
 
 ### HTTPS Broker
 
-- 暗号化Envelope、公開Manifest、Receiptの一時中継
-- 救助本文を復号しない設計
-- 重複排除、TTL、scoped credential
-- API契約・負荷・障害系テストの対象
+- Temporarily relay encrypted Envelopes, public Manifests, and Receipts.
+- Keep rescue content opaque to the Broker.
+- Apply deduplication, TTLs, and scoped credentials.
+- Participate in API contract, load, and failure-path testing.
 
-### ローカル実証機能
+### Local pilot features
 
-| 機能 | 役割 | 制約 |
+| Feature | Purpose | Limitation |
 |---|---|---|
-| **PUERTA** | ブラウザから訓練用依頼を登録 | 成功は「このPCへ保存した」ことのみ示す |
-| **PONTE** | staff Observationと訓練CSVを登録 | CSV由来情報は未確認として扱う |
-| **ÉCART** | 未確認・情報不足・確認優先度を整理 | 行方不明・負傷・死亡・出動を自動判定しない |
-| **ANTICIPO Lite** | 移動・電源など限定的な支援flagを管理 | 診断、薬、公的番号などを保存しない |
-| **MOSAIK** | Local Web / LAN / Nearby / Broker / Receiptの経路を区別 | 暗号文や個人情報を履歴へ表示しない |
+| **PUERTA** | Register drill requests from a browser. | Success means only that the request was stored on this PC. |
+| **PONTE** | Register staff observations and drill CSV data. | CSV-derived information remains unverified. |
+| **ÉCART** | Organize unverified items, missing information, and verification priority. | Does not automatically classify people as missing, injured, deceased, or dispatched-to. |
+| **ANTICIPO Lite** | Track limited support flags such as mobility and power needs. | Does not store diagnoses, medication, or government identifiers. |
+| **MOSAIK** | Distinguish Local Web / LAN / Nearby / Broker / Receipt paths. | Does not expose ciphertext or personal information in history views. |
 
-本番profileではローカル実証ページとAPIは無効化されます。Android側の専用訓練表示・保存分離は今後の作業です。
+Local pilot pages and APIs are disabled in the production profile. Dedicated Android drill presentation and storage separation remain future work.
 
 ---
 
-## 「送れた」と「届いた」を分ける
+## Delivery states are intentionally different
 
-Relayでは、通信APIが成功しただけで「救助拠点に届いた」とは表示しません。
+Relay does not treat a successful communication API call as proof that a rescue coordination point received a request.
 
-| 表示 | 意味 |
+| State | Meaning |
 |---|---|
-| **この端末に保存しました** | 端末内保存。まだ外部へ届いていない場合がある |
-| **近くの端末へ中継中です** | 端末間で搬送中。救助拠点の確認はまだない |
-| **救助拠点に保存** | PC Gatewayが署名したReceiptを確認済み |
-| **スタッフが受領 / 対応中 / 完了** | 救助拠点側が署名した対応状態を確認済み |
+| **Saved on this device** | Stored locally; it may not have left the device yet. |
+| **Relaying through nearby devices** | In transit between devices; no rescue-point confirmation yet. |
+| **Stored at the rescue point** | A signed Receipt from the PC Gateway has been verified. |
+| **Accepted / In progress / Completed by staff** | A Gateway-signed staff handling state has been verified. |
 
-Nearby転送完了、peer ACK、HTTP 2xx、Broker保存、ブラウザ受付完了だけでは、スタッフ受領や救助開始を意味しません。
+Nearby transfer completion, a peer ACK, HTTP `2xx`, Broker storage, or browser intake completion alone does **not** mean that staff accepted the request or that rescue activity began.
 
 ---
 
-## セキュリティの考え方
+## Security model
 
-| 境界 | 方針 |
+| Boundary | Design approach |
 |---|---|
-| 救助本文 | Androidで暗号化してから保存・転送。中継端末とBrokerは復号しない |
-| Gateway登録 | QRを読んだだけでは登録せず、fingerprint確認を要求 |
-| PC Gateway | 既定はloopback接続。LAN公開は明示操作のみ |
-| Windows秘密鍵 | 任意で同一Windowsユーザー・同一PCに結び付くDPAPI保護を使用可能 |
-| 訓練受付 | productionでは無効。same-Origin、サイズ、形式、rate limitを検査 |
-| 公式情報 | 出典と検証状態を表示し、trust anchorがない情報を「真正」と断定しない |
+| Rescue content | Encrypt on Android before storage or transfer. Relay devices and the Broker are not intended to decrypt it. |
+| Gateway enrollment | Scanning a QR code alone is insufficient; fingerprint confirmation is required. |
+| PC Gateway | Binds to loopback by default. LAN exposure requires an explicit action. |
+| Windows private keys | Optional DPAPI protection can bind secrets to the same Windows user and PC. |
+| Drill intake | Disabled in production; validates same-origin behavior, size, format, and rate limits. |
+| Official information | Shows provenance and verification state instead of claiming authenticity without a trust anchor. |
 
-Windows DPAPIは任意機能です。既定のowner-onlyローカルファイルは、HSM・TPM・KMSによる鍵保護と同等ではありません。
+Windows DPAPI is optional. The default owner-only local file model is **not** equivalent to hardware-backed HSM, TPM, or KMS key protection.
 
-主な自動検査:
+Major automated checks include:
 
-- CodeQLによるJava/Kotlin、JavaScript/TypeScript、GitHub Actions解析
-- gitleaksによる秘密情報scan
-- actionlint / zizmorによるworkflow検査
-- Gradle依存関係検証とwrapper hash確認
-- Dependency Review / Dependabot / OpenSSF Scorecard
-- Jazzer / ClusterFuzzLiteによるdecoder fuzz
-- property-based test / mutation test / ArchUnit
-- OpenAPI 3.1 + SchemathesisによるBroker API契約検査
-- Toxiproxyや並行負荷試験によるBroker耐障害性検査
+- CodeQL for Java/Kotlin, JavaScript/TypeScript, and GitHub Actions.
+- gitleaks secret scanning.
+- actionlint and zizmor workflow checks.
+- Gradle dependency verification and wrapper hash checks.
+- Dependency Review, Dependabot, and OpenSSF Scorecard.
+- Jazzer / ClusterFuzzLite decoder fuzzing.
+- Property-based tests, mutation tests, and ArchUnit checks.
+- OpenAPI 3.1 + Schemathesis Broker API contract checks.
+- Broker resilience checks using Toxiproxy and concurrent load tests.
 
-**検査基盤が存在することと、全実機・全環境で安全に動くことは同義ではありません。**
+**The existence of automated checks does not prove safe behavior on every physical device, network, or field environment.**
 
 ---
 
-## 検証
+## Verification
 
-### Windows一括検証
+### Windows validation suite
 
 ```powershell
 .\scripts\validate-windows-development.ps1
 ```
 
-結果は`PASS` / `FAIL` / `BLOCKED` / `NOT_RUN`へ分類され、次へ保存されます。
+Results are classified as `PASS`, `FAIL`, `BLOCKED`, or `NOT_RUN` and written to:
 
 ```text
 artifacts/windows-validation-report.json
 ```
 
-Release前の厳格判定:
+For strict release-oriented validation:
 
 ```powershell
 .\scripts\validate-windows-development.ps1 -Strict
 ```
 
-### readiness整合性
+### Readiness consistency
 
 ```powershell
 python tools/readiness/readiness_tool.py validate
@@ -280,10 +280,10 @@ python tools/readiness/readiness_tool.py generate
 python tools/readiness/readiness_tool.py check
 ```
 
-### 主な個別検証
+### Selected checks
 
 <details>
-<summary><strong>コマンドを表示</strong></summary>
+<summary><strong>Show commands</strong></summary>
 
 JVM / Android unit / Gateway / Broker:
 
@@ -291,7 +291,7 @@ JVM / Android unit / Gateway / Broker:
 .\gradlew.bat :shared:jvmTest :relay-protocol:test :app:testDebugUnitTest :pc-gateway:test :broker:test
 ```
 
-Android 6.0相当 API 23 classic AVD:
+Android 6.0-equivalent API 23 classic AVD:
 
 ```powershell
 .\scripts\android-test\run-api23-smoke.ps1
@@ -312,7 +312,7 @@ npx playwright install chromium
 npm test
 ```
 
-APK再現性:
+APK reproducibility:
 
 ```powershell
 .\scripts\verify-build-reproducibility.ps1
@@ -322,47 +322,45 @@ APK再現性:
 
 ---
 
-## 実運用までに必要なこと
+## What is still required before real-world operation
 
-現在の大きな未完了領域は次の5つです。
+1. **Physical-device and RF validation** — multiple Android devices, multi-hop Nearby, BLE, reboot behavior, Doze, battery-saving modes, battery usage, and thermal behavior.
+2. **Production trust data** — Regional Root, signed Shelter Directory data, Gateway keys, and fingerprint-verification procedures.
+3. **Production infrastructure** — TLS, DNS, monitoring, backups, Broker HA, RTO/RPO targets, and failure drills.
+4. **Operations and privacy** — retention, deletion, consent, responsibility boundaries, staff training, legal review, insurance, and communications-regulation review.
+5. **Production distribution** — organizational Android signing, Windows Authenticode, release approval, and installation validation on representative devices.
 
-1. **実機・電波試験** — Android複数台、Nearby多段、BLE、reboot、Doze、省電力、battery・thermal
-2. **正式な信頼情報** — Regional Root、署名済みShelter Directory、Gateway鍵とfingerprint確認
-3. **本番インフラ** — TLS、DNS、監視、backup、Broker HA、RTO/RPO、障害訓練
-4. **運用とprivacy** — 保存期間、削除、同意、責任分界、staff訓練、法務・保険・通信制度
-5. **正式配布** — Android組織署名、Windows Authenticode、release承認、代表端末へのinstall確認
-
-完全な一覧は [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md) と [BLOCKED_BY_EXTERNAL_DECISIONS](docs/readiness/BLOCKED_BY_EXTERNAL_DECISIONS.md) を参照してください。
+See [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md) and [BLOCKED_BY_EXTERNAL_DECISIONS](docs/readiness/BLOCKED_BY_EXTERNAL_DECISIONS.md) for the complete lists.
 
 ---
 
-## Relayに協力する
+## Contributing
 
-Relayが今もっとも必要としているのは、機能数を増やすことだけではなく、**第三者による実機・電波・運用面の検証を増やすこと**です。
+Relay currently benefits more from **independent validation on physical devices, real networks, and realistic operating conditions** than from simply adding more features.
 
-特に歓迎する協力:
+Especially useful contributions include:
 
-- Android複数台を使ったNearby / LAN配送の再現テスト
-- 端末メーカー・Android version・省電力設定が異なる環境での挙動報告
-- 避難訓練を想定したUI / UXレビュー
-- PC Gatewayの導入・運用手順レビュー
-- privacy、鍵管理、障害対応、データ保持に関するレビュー
-- バグ報告、テスト追加、ドキュメント改善、Pull Request
+- Reproducing Nearby / LAN delivery across multiple Android devices.
+- Reporting behavior across device vendors, Android versions, and battery-saving configurations.
+- Reviewing the UI/UX from an evacuation-drill perspective.
+- Reviewing PC Gateway setup and operational procedures.
+- Reviewing privacy, key management, failure handling, and data retention.
+- Reporting bugs, adding tests, improving documentation, and submitting pull requests.
 
-問題を見つけた場合は [Issues](https://github.com/NEGI46/Relay/issues) へ報告してください。セキュリティ上の問題は公開Issueへ機密情報を書かず、[Security policy](SECURITY.md) の手順に従ってください。
+Found a problem? Open an [Issue](https://github.com/heynegix/Relay/issues). For security issues, do **not** post sensitive details publicly; follow the [Security Policy](SECURITY.md).
 
 ---
 
-## 開発環境
+## Development environment
 
 - JDK 17
 - Android SDK / API 36
 - Git
 - Windows installer: WiX 3
 - Broker container: Docker Compose
-- browser E2E: Node.js
+- Browser E2E: Node.js
 
-主なversion:
+Key versions:
 
 - Kotlin `2.3.21`
 - Android Gradle Plugin `9.3.0`
@@ -372,79 +370,54 @@ Relayが今もっとも必要としているのは、機能数を増やすこと
 
 ---
 
-## 主要ドキュメント
+## Documentation
 
-### 初めて読む場合
+### Start here
 
-- [自治体向け現状サマリ](docs/readiness/MUNICIPAL_SUMMARY.md)
-- [全機能のreadiness表](docs/readiness/READINESS_TABLE.md)
-- [未完了・外部判断が必要な項目](docs/readiness/OPEN_ITEMS.md)
-- [正式Releaseの証拠一覧](docs/readiness/RELEASE_EVIDENCE.md)
+- [Municipal readiness summary](docs/readiness/MUNICIPAL_SUMMARY.md)
+- [Full readiness table](docs/readiness/READINESS_TABLE.md)
+- [Open and externally blocked items](docs/readiness/OPEN_ITEMS.md)
+- [Release evidence index](docs/readiness/RELEASE_EVIDENCE.md)
 
-### 機能・運用
+### Features & operations
 
-- [背景中継モード](docs/BACKGROUND_RELAY_MODE.md)
-- [Nearby実装](docs/NEARBY_IMPLEMENTATION.md)
+- [Background relay mode](docs/BACKGROUND_RELAY_MODE.md)
+- [Nearby implementation](docs/NEARBY_IMPLEMENTATION.md)
 - [PC Gateway setup](docs/PC_GATEWAY_SETUP.md)
 - [PC Gateway security](docs/PC_GATEWAY_SECURITY.md)
-- [ローカル実証受付](docs/LOCAL_PILOT_INGRESS.md)
+- [Local pilot ingress](docs/LOCAL_PILOT_INGRESS.md)
 - [HTTPS Broker deployment](deployment/broker/README.md)
-- [現地受入試験](docs/runbooks/FIELD_ACCEPTANCE_TEST.md)
+- [Field acceptance test](docs/runbooks/FIELD_ACCEPTANCE_TEST.md)
 
-### セキュリティ・API
+### Security & API
 
-- [Security policy](SECURITY.md)
-- [依存関係検証](docs/security/DEPENDENCY_VERIFICATION.md)
-- [Branch protection設定](docs/security/BRANCH_PROTECTION.md)
+- [Security Policy](SECURITY.md)
+- [Dependency verification](docs/security/DEPENDENCY_VERIFICATION.md)
+- [Branch protection](docs/security/BRANCH_PROTECTION.md)
 - [Broker OpenAPI 3.1](docs/api/broker-openapi.yaml)
 
 <details>
-<summary><strong>リポジトリ構成</strong></summary>
+<summary><strong>Repository structure</strong></summary>
 
 ```text
-app/                  Androidアプリ
-shared/               共通model・暗号・trust contract
+app/                  Android application
+shared/               Shared models, crypto, and trust contracts
 relay-protocol/       Gateway wire protocol
-pc-gateway/           PC Gateway・staff console・ローカル実証
+pc-gateway/           PC Gateway, staff console, and local pilot
 broker/               HTTPS Broker
-deployment/broker/    Broker配置構成
+deployment/broker/    Broker deployment configuration
 pc-ble-bridge/        Windows BLE sidecar
-fuzz-jvm/             decoder fuzz target
-staff-console-e2e/    browser E2E
-scripts/              build・起動・検証・release tool
-tools/readiness/      readinessの検証・生成tool
-docs/                 設計・監査・runbook
+fuzz-jvm/             Decoder fuzz targets
+staff-console-e2e/    Browser E2E tests
+scripts/              Build, startup, validation, and release tools
+tools/readiness/      Readiness validation and document generation
+docs/                 Design notes, audits, and runbooks
 ```
 
 </details>
 
 ---
 
-## English overview
-
-<details>
-<summary><strong>Open English summary</strong></summary>
-
-**Relay is an open-source, local-first encrypted rescue-information relay for outages and intermittent networks.**
-
-Android creates and encrypts rescue requests before storage or transfer. Nearby, an approved LAN Gateway, or an optional HTTPS Broker can carry ciphertext toward a PC Gateway, where authorized staff can decrypt and manage the request. Signed receipts distinguish local storage, transit, Gateway storage, staff acceptance, response, and completion.
-
-Relay is designed around three principles:
-
-- avoid relying on a single network path;
-- keep rescue content unreadable to intermediate relay devices and the Broker;
-- never claim that a request reached responders merely because a transport API returned success.
-
-The project includes automated security and quality checks, but automated evidence does **not** replace physical-device, RF, privacy, operational, or field validation.
-
-**Relay is not an emergency-dispatch service, not a replacement for 119, and is not production-ready.**
-
-</details>
-
----
-
-## License / ライセンス
+## License
 
 Relay is available under the [Apache License 2.0](LICENSE).
-
-Relayは [Apache License 2.0](LICENSE) の下で提供されます。ライセンス条件の範囲で利用・改変・再配布できます。

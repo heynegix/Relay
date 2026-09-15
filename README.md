@@ -83,13 +83,13 @@ The machine-readable source of truth for readiness is [`docs/readiness/status.ym
 
 <!-- BEGIN GENERATED: readiness-summary (tools/readiness/readiness_tool.py; edit docs/readiness/status.yml instead) -->
 > [!NOTE]
-> This section is generated from `docs/readiness/status.yml`, the single source of truth. Do not edit it manually.
+> この節は `docs/readiness/status.yml`（唯一の正）から自動生成されます。手で編集しないでください。
 >
-> **Status basis: 2026-07-29 / commit `23bd1da` / branch `agent/zero-operation-relay`**
+> **status基準: 2026-07-29 / commit `23bd1da` / branch `agent/zero-operation-relay`**
 >
-> 50 tracked features: 46 implemented / 3 not implemented / 43 automatically tested / 1 emulator-tested / **0 device-tested / 0 field-tested** / 7 include external-decision blockers.
+> 管理対象 50機能: 実装済み 46 / 未実装 3 / 自動試験済み 43 / emulator検証済み 1 / **実機検証済み 0 / 現地検証済み 0** / 外部判断待ちを含む 7
 >
-> `IMPLEMENTED` and `AUTOMATED_TESTED` do not imply `DEVICE_TESTED` or `FIELD_TESTED`. See [READINESS_TABLE](docs/readiness/READINESS_TABLE.md) for the full matrix, [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md) for unfinished work, and [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) for the municipal summary.
+> IMPLEMENTEDやAUTOMATED_TESTEDはDEVICE_TESTED・FIELD_TESTEDを意味しません。全機能の軸別状態は [READINESS_TABLE](docs/readiness/READINESS_TABLE.md)、未完了項目は [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md)、自治体向け要約は [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) を参照してください。
 <!-- END GENERATED: readiness-summary -->
 
 </details>

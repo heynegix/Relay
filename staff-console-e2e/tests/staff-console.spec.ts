@@ -66,8 +66,8 @@ test.describe("staff console", () => {
     await expect(page.locator("#requestCount")).toHaveText("2");
     await expect(page.locator("#requestList .request-card")).toHaveCount(2);
 
-    // Open the URGENT support request (its card shows the 府中町浜田 location) and drive it forward.
-    const supportCard = page.locator("#requestList .request-card", { hasText: "浜田" });
+    // Open the URGENT support request (its card shows the 設定地域Example district location) and drive it forward.
+    const supportCard = page.locator("#requestList .request-card", { hasText: "Example district" });
     await expect(supportCard).toBeVisible();
     await supportCard.click();
 

@@ -111,7 +111,7 @@ object StaffConsoleE2eServer {
                 seriouslyInjured = true,
                 trapped = true,
                 supportNeeds = setOf(RescueSupportNeed.RESCUE_TEAM, RescueSupportNeed.MEDICINE),
-                location = RescueLocation(latitude = 34.394, longitude = 132.506, accuracyMeters = 12f, description = "府中町本町 2丁目 倒壊家屋", capturedAtEpochMillis = now),
+                location = RescueLocation(latitude = 34.394, longitude = 132.506, accuracyMeters = 12f, description = "設定地域本町 2丁目 倒壊家屋", capturedAtEpochMillis = now),
                 freeText = "1階が倒壊し2名が閉じ込め。呼びかけに応答あり。",
             ),
             RescuePayload(
@@ -125,7 +125,7 @@ object StaffConsoleE2eServer {
                 conditions = setOf(RescueCondition.SUPPORT_NEEDED),
                 elderlyPresent = true,
                 supportNeeds = setOf(RescueSupportNeed.WATER, RescueSupportNeed.FOOD),
-                location = RescueLocation(latitude = 34.390, longitude = 132.503, accuracyMeters = 30f, description = "府中町浜田 集会所付近", capturedAtEpochMillis = now),
+                location = RescueLocation(latitude = 34.390, longitude = 132.503, accuracyMeters = 30f, description = "設定地域Example district 集会所付近", capturedAtEpochMillis = now),
                 freeText = "高齢者が孤立。水と食料の支援を希望。",
             ),
         )

@@ -114,3 +114,21 @@ if ($workflow -match 'uses:\s+[^\s@]+@v\d') { throw 'CI workflow contains a muta
 Require-Text $workflow 'verify-implementation-contracts.ps1' 'implementation contract CI step'
 
 Write-Output 'Relay implementation contracts passed.'
+
+
+$regionalProfile = Read-Text 'pc-gateway/src/main/kotlin/com/example/relay/pcgateway/RegionalDeploymentProfile.kt'
+Require-Text $gatewayConfig 'RELAY_REGIONAL_PROFILE' 'regional profile is runtime-configurable'
+Require-Text $regionalProfile 'RegionalDeploymentProfile' 'regional profile model exists'
+Require-Text $regionalProfile 'timezoneId' 'regional profile carries IANA timezone'
+Require-Text $regionalProfile 'tileTemplate' 'regional profile carries map provider'
+Require-Text $regionalProfile 'OfficialInfoFormat' 'regional profile carries official feed format'
+$forbiddenCurrentSourceValues = @('府中町','3430200','town.fuchu','gsi-fuchu','FUCHU_PILOT','fuchu-01','広島県安芸郡')
+$scanRoot = (Resolve-Path -LiteralPath $root).Path
+$scanFiles = Get-ChildItem -LiteralPath $scanRoot -Recurse -File | Where-Object {
+    $_.FullName -notmatch '[\\/]\\.git[\\/]' -and $_.FullName -ne (Join-Path $scanRoot 'scripts/verify-implementation-contracts.ps1')
+}
+foreach ($needle in $forbiddenCurrentSourceValues) {
+    foreach ($file in $scanFiles) {
+        Reject-Text (Get-Content -LiteralPath $file.FullName -Raw -Encoding utf8) $needle ("current source contains retired location value: " + $needle)
+    }
+}

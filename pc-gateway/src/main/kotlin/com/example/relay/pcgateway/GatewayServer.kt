@@ -1,3 +1,4 @@
+@file:Suppress("LongMethod", "CyclomaticComplexMethod", "LongParameterList")
 package com.example.relay.pcgateway
 
 import com.example.relay.gateway.protocol.GATEWAY_PROTOCOL_VERSION
@@ -74,6 +75,12 @@ private const val MAX_CONTROL_BODY_BYTES = 16L * 1024
     val bleBridgeStatus: String = "unavailable",
     val version: String = "unknown",
     val buildSha: String = "unknown",
+    val regionId: String = "global",
+    val regionName: String = "Configured region",
+    val timezoneId: String = "UTC",
+    val locale: String = "en",
+    val offlineMapEnabled: Boolean = false,
+    val officialInfoEnabled: Boolean = false,
     val shelterId: String = "unknown",
     val recipientKeyId: String? = null,
     val manifestFingerprint: String? = null,
@@ -112,7 +119,7 @@ fun Application.gatewayModule(
      */
     rescueDeliveryReady: Boolean = rescueBleReady,
     rescueIntakeService: RescueIntakeService? = null,
-    offlineMap: GsiTileCache? = null,
+    offlineMap: OfflineMapTileCache? = null,
     officialInformation: OfficialInformationService? = null,
     rescueKeyStatus: GatewayRescueKeyStatus = GatewayRescueKeyStatus.notChecked(),
     anonymousLimiter: AnonymousIngressRateLimiter = AnonymousIngressRateLimiter(
@@ -156,6 +163,12 @@ fun Application.gatewayModule(
                     bleBridgeStatus = if (rescueBleReady) "awaiting_sidecar" else "not_ready",
                     version = config.version,
                     buildSha = config.buildSha,
+                    regionId = config.regionalProfile.regionId,
+                    regionName = config.regionalProfile.displayName,
+                    timezoneId = config.regionalProfile.timezoneId,
+                    locale = config.regionalProfile.defaultLocale,
+                    offlineMapEnabled = config.regionalProfile.map.enabled,
+                    officialInfoEnabled = config.regionalProfile.officialInfo.enabled,
                     shelterId = config.shelterId,
                     recipientKeyId = config.rescueRecipientKeyId,
                     manifestFingerprint = config.rescueManifestFingerprint,
@@ -264,6 +277,7 @@ fun Application.gatewayModule(
             call.respond(
                 RescueOperatorListResponse(
                     System.currentTimeMillis(),
+                    municipality = config.regionalProfile.displayName,
                     retentionDays = config.rescueRetentionDays,
                     items = items,
                 ),

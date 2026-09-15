@@ -1,9 +1,9 @@
 (() => {
   const $ = (id) => document.getElementById(id);
-  const state = { requests: [], selectedId: null, filter: "active", timer: null, soundTimer: null, notifiedWarning: false, staff: null };
-  const initialMapView = { latitude: 34.392, longitude: 132.504, zoom: 15 };
-  const mapBounds = { south: 34.36, north: 34.43, west: 132.45, east: 132.55 };
-  const mapLimits = { minZoom: 13, maxNativeZoom: 15, maxZoom: 18 };
+  const state = { requests: [], selectedId: null, filter: "active", timer: null, soundTimer: null, notifiedWarning: false, staff: null, regionName: "Configured region", locale: "en", timezoneId: "UTC", mapEnabled: false };
+  const initialMapView = { latitude: 0, longitude: 0, zoom: 2 };
+  const mapBounds = { south: -1, north: 1, west: -1, east: 1 };
+  const mapLimits = { minZoom: 0, maxNativeZoom: 2, maxZoom: 5 };
   const mapViews = {
     rescueMap: { ...initialMapView },
     fullMap: { ...initialMapView },
@@ -30,7 +30,7 @@
     }
     return body;
   }
-  function fmtTime(value) { return value ? new Date(value).toLocaleString("ja-JP", { hour12: false }) : "不明"; }
+  function fmtTime(value) { return value ? new Date(value).toLocaleString(state.locale || "en", { hour12: false, timeZone: state.timezoneId || "UTC" }) : "不明"; }
   function statusLabel(value) {
     return ({ UNCONFIRMED: "未確認", CONFIRMED: "確認済み", PREPARING: "対応準備中", RESCUE_REQUESTED: "対応要請を記録（外部連携未確認）", RESPONDING: "対応中", COMPLETED: "完了", UNABLE: "対応不可", DUPLICATE: "重複" })[value] || value;
   }
@@ -313,6 +313,10 @@
   }
   function renderTileMap(element, requests) {
     bindMapInteractions(element);
+    if (!state.mapEnabled) {
+      element.innerHTML = '<p class="empty map-unconfigured">地図は地域プロファイルで設定されていません。</p>';
+      return;
+    }
     const view = mapView(element);
     const viewportWidth = element.clientWidth || (element.classList.contains("large") ? 935 : 560);
     const viewportHeight = element.clientHeight || (element.classList.contains("large") ? 560 : 310);
@@ -347,7 +351,17 @@
 
   async function loadMapStatus() {
     const map = await api("/api/map/status", { headers: authHeaders() });
+    state.mapEnabled = map.enabled === true;
+    state.regionName = map.regionName || state.regionName;
+    if (Number.isFinite(map.initialLatitude)) initialMapView.latitude = map.initialLatitude;
+    if (Number.isFinite(map.initialLongitude)) initialMapView.longitude = map.initialLongitude;
+    if (Number.isFinite(map.initialZoom)) initialMapView.zoom = map.initialZoom;
+    if (Number.isFinite(map.south)) mapBounds.south = map.south;
+    if (Number.isFinite(map.north)) mapBounds.north = map.north;
+    if (Number.isFinite(map.west)) mapBounds.west = map.west;
+    if (Number.isFinite(map.east)) mapBounds.east = map.east;
     mapLimits.minZoom = map.minZoom; mapLimits.maxNativeZoom = map.maxNativeZoom; mapLimits.maxZoom = map.maxZoom;
+    if ($("regionName")) $("regionName").textContent = map.regionName || "設定地域";
     Object.values(mapViews).forEach((view) => { view.zoom = clamp(view.zoom, mapLimits.minZoom, mapLimits.maxZoom); });
     const ratio = map.expectedTiles ? map.cachedTiles / map.expectedTiles : 0;
     $("mapProgress").value = ratio; $("mapProgressLabel").textContent = `${map.cachedTiles} / ${map.expectedTiles} タイル保存済み（詳細 ${map.minZoom}〜${map.maxNativeZoom}、拡大 ${map.maxZoom} まで）${map.lastError ? ` / ${map.lastError}` : ""}`;
@@ -371,12 +385,12 @@
 
   async function loadOfficial() {
     const info = await api("/api/official-info", { headers: authHeaders() });
-    $("officialAlert").textContent = info.urgent ? `気象庁: ${info.warningHeadline}` : `公式情報: ${info.warningHeadline}`;
+    $("officialAlert").textContent = info.urgent ? `公式情報: ${info.warningHeadline}` : `公式情報: ${info.warningHeadline}`;
     $("officialAlert").classList.toggle("urgent", info.urgent);
-    $("warningDetail").innerHTML = `<h3>気象庁 警報・注意報</h3><p>${escapeHtml(info.warningHeadline)}</p><ul>${info.warningStatuses.map((value) => `<li>${escapeHtml(value)}</li>`).join("") || "<li>府中町の発表状況なし</li>"}</ul><p class="fine">確認 ${fmtTime(info.checkedAtEpochMillis)}${info.usedCachedWarning ? "（保存済み情報）" : ""}${escapeHtml(provenanceLabel(info.provenance))}</p>`;
+    $("warningDetail").innerHTML = `<h3>公式情報</h3><p>${escapeHtml(info.warningHeadline)}</p><ul>${info.warningStatuses.map((value) => `<li>${escapeHtml(value)}</li>`).join("") || "<li>発表状況なし</li>"}</ul><p class="fine">確認 ${fmtTime(info.checkedAtEpochMillis)}${info.usedCachedWarning ? "（保存済み情報）" : ""}${escapeHtml(provenanceLabel(info.provenance))}</p>`;
     $("officialSources").innerHTML = info.sources.map((source) => `<a class="source-card" href="${escapeHtml(source.url)}" target="_blank" rel="noopener"><strong>${escapeHtml(source.title)}</strong><span>${escapeHtml(source.organization)} 公式サイト</span></a>`).join("");
     if (info.urgent && !state.notifiedWarning && "Notification" in window && Notification.permission === "granted") {
-      new Notification("Relay 府中町 公式警報", { body: info.warningHeadline }); state.notifiedWarning = true;
+      new Notification("Relay official alert", { body: info.warningHeadline }); state.notifiedWarning = true;
     }
   }
 

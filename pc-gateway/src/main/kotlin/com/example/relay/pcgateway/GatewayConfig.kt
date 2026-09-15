@@ -5,6 +5,7 @@ import com.example.relay.rescue.beaconFingerprintBytes
 import java.io.File
 import java.net.InetAddress
 import java.net.URI
+import java.nio.file.Path
 import java.security.SecureRandom
 import java.util.Base64
 import java.util.UUID
@@ -97,12 +98,15 @@ data class GatewayConfig(
         ?: File(System.getProperty("user.home"), if (trainingMode) ".relay/training/rescue-keys.json" else ".relay/rescue-keys.json").path,
     /** At-rest protection mode for [rescueKeyPath]; parsing is fail-closed on unknown values. */
     val keyProtection: GatewayKeyProtection = GatewayKeyProtection.fromEnvironment(),
+    val regionalProfilePath: String = System.getenv("RELAY_REGIONAL_PROFILE")
+        ?: File(System.getProperty("user.home"), if (trainingMode) ".relay/training/region/profile.json" else ".relay/region/profile.json").path,
+    val regionalProfile: RegionalDeploymentProfile = RegionalDeploymentProfileLoader.load(Path.of(regionalProfilePath)),
     val offlineMapPath: String = System.getenv("RELAY_OFFLINE_MAP_DIR")
-        ?: File(System.getProperty("user.home"), ".relay/maps/gsi-fuchu").path,
+        ?: File(System.getProperty("user.home"), ".relay/maps/regional").path,
     val officialInfoCachePath: String = System.getenv("RELAY_OFFICIAL_INFO_CACHE")
         ?: File(
             System.getProperty("user.home"),
-            if (trainingMode) ".relay/training/official/jma-warning-340000.json" else ".relay/official/jma-warning-340000.json",
+            if (trainingMode) ".relay/training/official/official-info.json" else ".relay/official/official-info.json",
         ).path,
     /**
      * Public regional root used to verify the shelter's signed BLE identity.
@@ -204,6 +208,7 @@ data class GatewayConfig(
 
     /** Non-sensitive diagnostics surfaced by health; never contains host paths, keys, or tokens. */
     val configurationWarnings: List<String> = buildList {
+        if (regionalProfile.regionId == "global") add("regional_profile_not_configured")
         if (trainingMode) add("training_mode_active_production_data_isolated")
         if (profile == GatewayProfile.DEVELOPMENT) add("development_profile_compatibility_enabled")
         if (profile == GatewayProfile.LAB) add("lab_profile_not_for_production_operation")
@@ -223,6 +228,7 @@ data class GatewayConfig(
     /** Non-secret configuration snapshot allowed in an operator audit record. */
     val auditConfigurationTarget: String = listOf(
         "profile=${profile.name.lowercase()}",
+        "region=${regionalProfile.regionId}",
         "training=$trainingMode",
         "lan=${lanMode.name.lowercase()}",
         "anonymous=$anonymousIngressEnabled",
@@ -231,6 +237,7 @@ data class GatewayConfig(
     ).joinToString(";")
 
     init {
+        regionalProfile.validate()
         require(port in 1..65_535) { "RELAY_GATEWAY_PORT must be a valid TCP port" }
         require(publicPort in 1..65_535) { "RELAY_GATEWAY_PUBLIC_PORT must be a valid TCP port" }
         require(lanDiscoveryPort in 1..65_535) { "RELAY_GATEWAY_DISCOVERY_PORT must be a valid UDP port" }
@@ -291,6 +298,7 @@ data class GatewayConfig(
                 "RELAY_GATEWAY_DB" to dbPath,
                 "RELAY_RESCUE_KEY_FILE" to rescueKeyPath,
                 "RELAY_OFFICIAL_INFO_CACHE" to officialInfoCachePath,
+                "RELAY_REGIONAL_PROFILE" to regionalProfilePath,
             ).forEach { (name, path) ->
                 require(hasTrainingPathSegment(path)) {
                     "training mode requires $name to point inside a 'training' directory; refusing to reuse production data paths"

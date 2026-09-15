@@ -128,12 +128,12 @@ class RescueViewModelTest {
         val recipient = RescueCryptography.generateRecipientKeyPair()
         val signer = RescueCryptography.generateShelterSigningKeyPair()
         val repository = InMemoryRescueEnvelopeRepository()
-        val keys = ShelterPublicKeys("fuchu-area", recipient.publicKey, signer.publicKey)
+        val keys = ShelterPublicKeys("regional-area", recipient.publicKey, signer.publicKey)
         val viewModel = RescueViewModel(
             coordinator = testSessionCoordinator(
                 repository,
                 ShelterPublicKeyProvider { keys },
-                locationProvider = FixedLocationProvider(GeoFix(34.392, 132.504, 7f, TEST_NOW)),
+                locationProvider = FixedLocationProvider(GeoFix(0.0, 0.0, 7f, TEST_NOW)),
                 nowEpochMillis = { TEST_NOW },
             ),
             repository = repository,
@@ -149,7 +149,7 @@ class RescueViewModelTest {
         assertEquals(0, payload.personCount)
         assertEquals(RescueUrgency.IMMEDIATE, payload.urgency)
         assertEquals(setOf(RescueCondition.LIFE_THREATENING), payload.conditions)
-        assertEquals(34.392, payload.location!!.latitude!!, 0.0)
+        assertEquals(0.0, payload.location!!.latitude!!, 0.0)
         assertEquals(TEST_NOW, payload.location!!.capturedAtEpochMillis)
     }
 

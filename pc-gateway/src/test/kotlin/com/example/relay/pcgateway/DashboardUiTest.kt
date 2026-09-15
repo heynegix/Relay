@@ -150,7 +150,8 @@ class DashboardUiTest {
 
             val index = client.get("/")
             assertEquals(HttpStatusCode.OK, index.status)
-            assertTrue(index.bodyAsText().contains("Relay 府中町 救助拠点"))
+            assertTrue(index.bodyAsText().contains("Relay 救助拠点"))
+            assertTrue(index.bodyAsText().contains("設定地域"))
             assertTrue(index.bodyAsText().contains("STAFF ONLY"))
 
             val css = client.get("/app.css")

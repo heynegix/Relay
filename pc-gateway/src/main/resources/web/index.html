@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Relay 府中町 救助拠点</title>
+  <title>Relay 地域対応拠点</title>
   <link rel="stylesheet" href="/app.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
     <form id="setupForm" class="setup-card">
       <div class="wordmark" aria-hidden="true">R</div>
       <p class="eyebrow">STAFF ONLY</p>
-      <h1 id="setupTitle">Relay 救助拠点を開始</h1>
-      <p>対象地域は <strong>広島県安芸郡府中町</strong> です。個人の運用者アカウントでサインインしてください。</p>
+      <h1 id="setupTitle">Relay 地域対応拠点を開始</h1>
+      <p>対象地域は <strong>設定地域</strong> です。個人の運用者アカウントでサインインしてください。</p>
       <label>利用者名<input id="staffUsername" type="text" required autocomplete="username" maxlength="64"></label>
       <label>パスワード<input id="staffPassword" type="password" required autocomplete="current-password"></label>
       <button class="button primary" type="submit">運用画面を開く</button>
@@ -30,7 +30,7 @@
   </div>
 
   <header class="app-header">
-    <div class="brand"><span class="wordmark small" aria-hidden="true">R</span><div><h1>Relay 救助拠点</h1><p>広島県安芸郡府中町</p></div></div>
+    <div class="brand"><span class="wordmark small" aria-hidden="true">R</span><div><h1>Relay 救助拠点</h1><p id="regionName">設定地域</p></div></div>
     <div class="header-status"><span id="connectionDot" class="dot"></span><span id="connectionLabel">接続確認中</span><span id="modeLabel" class="mode-chip"></span><span id="staffNodeLabel"></span><button id="lockButton" class="button quiet" type="button">ロック</button></div>
   </header>
 
@@ -56,8 +56,8 @@
           <div id="requestList" class="request-list" aria-live="polite"></div>
         </section>
         <section class="map-column" aria-labelledby="mapHeading">
-          <div class="section-head"><div><p class="eyebrow">LOCATION</p><h2 id="mapHeading">府中町 救助地図</h2></div><span id="mapStatus" class="status-chip">地図確認中</span></div>
-          <div id="rescueMap" class="tile-map" aria-label="府中町の地図と救助依頼位置。ボタン、マウスホイール、ピンチ、矢印キーで操作できます"></div>
+          <div class="section-head"><div><p class="eyebrow">LOCATION</p><h2 id="mapHeading">地域対応地図</h2></div><span id="mapStatus" class="status-chip">地図確認中</span></div>
+          <div id="rescueMap" class="tile-map" aria-label="設定された地域の地図と救助依頼位置。ボタン、マウスホイール、ピンチ、矢印キーで操作できます"></div>
           <p class="attribution">出典：国土地理院「地理院タイル（標準地図）」</p>
           <div id="selectedDetail" class="detail-card"><p class="empty">左の依頼を選ぶと、正確な位置と状況を表示します。</p></div>
         </section>
@@ -66,17 +66,17 @@
 
     <section id="panel-map" class="panel">
       <div class="wide-card">
-        <div class="section-head"><div><p class="eyebrow">OFFLINE MAP</p><h2>府中町オフライン地図</h2></div><button id="prepareMap" class="button primary" type="button">地図をダウンロード</button></div>
-        <p>縮尺13〜15の府中町周辺をPCへ保存します。災害時にインターネットが切れても、保存済みタイルだけで縮尺18まで拡大できます。ボタン、マウスホイール、ダブルクリック、ピンチ、ドラッグ、キーボードに対応しています。</p>
+        <div class="section-head"><div><p class="eyebrow">OFFLINE MAP</p><h2>地域対応オフライン地図</h2></div><button id="prepareMap" class="button primary" type="button">地図をダウンロード</button></div>
+        <p>縮尺13〜15の設定地域周辺をPCへ保存します。災害時にインターネットが切れても、保存済みタイルだけで縮尺18まで拡大できます。ボタン、マウスホイール、ダブルクリック、ピンチ、ドラッグ、キーボードに対応しています。</p>
         <progress id="mapProgress" max="1" value="0"></progress><p id="mapProgressLabel" class="fine"></p>
-        <div id="fullMap" class="tile-map large" aria-label="府中町オフライン地図。ボタン、マウスホイール、ピンチ、矢印キーで操作できます"></div>
+        <div id="fullMap" class="tile-map large" aria-label="設定地域オフライン地図。ボタン、マウスホイール、ピンチ、矢印キーで操作できます"></div>
         <p class="attribution">出典：国土地理院「地理院タイル（標準地図）」。利用時は国土地理院コンテンツ利用規約に従います。</p>
       </div>
     </section>
 
     <section id="panel-official" class="panel">
       <div class="wide-card">
-        <p class="eyebrow">OFFICIAL SOURCES ONLY</p><h2>府中町の公式防災情報</h2>
+        <p class="eyebrow">OFFICIAL SOURCES ONLY</p><h2>地域の公式防災情報</h2>
         <div id="warningDetail" class="warning-detail"></div>
         <div id="officialSources" class="source-list"></div>
       </div>
@@ -91,13 +91,13 @@
 
     <section id="panel-settings" class="panel">
       <div class="wide-card settings-grid">
-        <div><p class="eyebrow">PILOT AREA</p><h2>初期設定</h2><dl><dt>都道府県</dt><dd>広島県</dd><dt>市区町村</dt><dd>安芸郡府中町</dd><dt>サインイン中の運用者</dt><dd id="settingsNode"></dd><dt>運用モード</dt><dd id="settingsProfile">確認中</dd></dl></div>
+        <div><p class="eyebrow">PILOT AREA</p><h2>初期設定</h2><dl><dt>地域</dt><dd id="regionNameSettings">設定地域</dd><dt>サインイン中の運用者</dt><dd id="settingsNode"></dd><dt>運用モード</dt><dd id="settingsProfile">確認中</dd></dl></div>
         <div><h3>通信確認</h3><p id="healthStatus">確認中</p><h3>運用ルール</h3><ul><li>画面は避難所スタッフだけが使用</li><li>最初に確認した運用者が担当</li><li>完了・取消から30日後に詳細を削除</li><li>一般利用者は避難所を選択しない</li></ul></div>
       </div>
     </section>
   </main>
 
-  <footer><span>Relay v1 Fuchu Pilot</span><span id="lastUpdated">—</span></footer>
+  <footer><span>Relay regional deployment</span><span id="lastUpdated">—</span></footer>
   <script src="/app.js"></script>
 </body>
 </html>

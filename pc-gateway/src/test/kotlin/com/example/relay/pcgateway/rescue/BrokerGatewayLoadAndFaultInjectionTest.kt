@@ -70,8 +70,8 @@ class BrokerGatewayLoadAndFaultInjectionTest {
     private val wire = Json { ignoreUnknownKeys = true; encodeDefaults = true }
     private val gatewayJson = Json { ignoreUnknownKeys = false; encodeDefaults = true }
 
-    private val shelterId = "fuchu-01"
-    private val gatewayId = "gateway-fuchu"
+    private val shelterId = "example-01"
+    private val gatewayId = "gateway-regional"
 
     private lateinit var brokerDbFile: File
     private lateinit var brokerStore: BrokerStore

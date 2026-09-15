@@ -6,7 +6,7 @@ submitting because dates and required fields are external state.
 
 ## Relay submission package
 
-- [ ] Use the Fuchu Town v1 scope in `docs/V1_FUCHU_PILOT.md` as the demo source of truth; do not claim next-version items as complete.
+- [ ] Use the configured region v1 scope in `docs/V1_REGIONAL_PILOT.md` as the demo source of truth; do not claim next-version items as complete.
 
 - [ ] Choose one track; Relay is most naturally an app for your life or
   education project depending on the final story.

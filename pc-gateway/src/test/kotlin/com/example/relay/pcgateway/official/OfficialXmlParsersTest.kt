@@ -21,7 +21,7 @@ class OfficialXmlParsersTest {
     fun parsesActualCapAlert() {
         val alert = CapAlertParser.parse(capFixture(status = "Actual"))
         assertEquals("Relay-Test-2026-001", alert.identifier)
-        assertEquals("bousai@town.fuchu.hiroshima.jp", alert.sender)
+        assertEquals("bousai@example.invalid", alert.sender)
         assertEquals("2026-07-26T09:00:00+09:00", alert.sent)
         assertEquals(CapStatus.ACTUAL, alert.status)
         assertEquals("Alert", alert.msgType)
@@ -34,8 +34,8 @@ class OfficialXmlParsersTest {
         assertEquals("Immediate", info.urgency)
         assertEquals("Severe", info.severity)
         assertEquals("Observed", info.certainty)
-        assertEquals("府中町 大雨警報", info.headline)
-        assertEquals(listOf("広島県安芸郡府中町"), info.areaDescriptions)
+        assertEquals("設定地域 大雨警報", info.headline)
+        assertEquals(listOf("設定地域"), info.areaDescriptions)
     }
 
     @Test
@@ -55,7 +55,7 @@ class OfficialXmlParsersTest {
     @Test
     fun missingMandatoryCapElementIsRejected() {
         val withoutSender = capFixture(status = "Actual")
-            .replace("<sender>bousai@town.fuchu.hiroshima.jp</sender>", "")
+            .replace("<sender>bousai@example.invalid</sender>", "")
         val error = assertThrows(OfficialXmlParseException::class.java) {
             CapAlertParser.parse(withoutSender)
         }
@@ -91,7 +91,7 @@ class OfficialXmlParsersTest {
         assertEquals("urn:uuid:c268e211-a34e-3f1c-9b3b-2ea4dbd6ab40", entry.id)
         assertEquals("気象庁本庁", entry.author)
         assertEquals("https://www.data.jma.go.jp/developer/xml/data/example.xml", entry.link)
-        assertEquals("【広島県気象警報・注意報】", entry.content)
+        assertEquals("【設定地域気象警報・注意報】", entry.content)
     }
 
     @Test
@@ -156,7 +156,7 @@ class OfficialXmlParsersTest {
         <?xml version="1.0" encoding="UTF-8"?>
         <alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
           <identifier>Relay-Test-2026-001</identifier>
-          <sender>bousai@town.fuchu.hiroshima.jp</sender>
+          <sender>bousai@example.invalid</sender>
           <sent>2026-07-26T09:00:00+09:00</sent>
           <status>$status</status>
           <msgType>Alert</msgType>
@@ -168,9 +168,9 @@ class OfficialXmlParsersTest {
             <urgency>Immediate</urgency>
             <severity>Severe</severity>
             <certainty>Observed</certainty>
-            <headline>府中町 大雨警報</headline>
+            <headline>設定地域 大雨警報</headline>
             <area>
-              <areaDesc>広島県安芸郡府中町</areaDesc>
+              <areaDesc>設定地域</areaDesc>
             </area>
           </info>
         </alert>
@@ -187,7 +187,7 @@ class OfficialXmlParsersTest {
             <updated>2026-07-26T00:09:45Z</updated>
             <author><name>気象庁本庁</name></author>
             <link href="https://www.data.jma.go.jp/developer/xml/data/example.xml"/>
-            <content type="text">【広島県気象警報・注意報】</content>
+            <content type="text">【設定地域気象警報・注意報】</content>
           </entry>
         </feed>
     """.trimIndent()

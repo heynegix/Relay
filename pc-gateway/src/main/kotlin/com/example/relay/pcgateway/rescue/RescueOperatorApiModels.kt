@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RescueOperatorListResponse(
     val generatedAtEpochMillis: Long,
-    val municipality: String = "広島県安芸郡府中町",
+    val municipality: String = "設定地域",
     val retentionDays: Int = 30,
     val items: List<RescueOperatorRequest>,
 )

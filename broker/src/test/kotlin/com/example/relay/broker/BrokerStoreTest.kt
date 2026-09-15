@@ -47,7 +47,7 @@ class BrokerStoreTest {
         envelopeId: String = "env-001",
         requestId: String = "req-001",
         requestVersion: Int = 1,
-        shelterId: String = "fuchu-01",
+        shelterId: String = "example-01",
         ciphertextHash: String = "a".repeat(64),
         expiresAt: Long = System.currentTimeMillis() + 3_600_000,
     ) = EncryptedRescueEnvelope(
@@ -73,7 +73,7 @@ class BrokerStoreTest {
         requestId: String = "req-001",
         requestVersion: Int = 1,
         ciphertextHash: String = "a".repeat(64),
-        shelterId: String = "fuchu-01",
+        shelterId: String = "example-01",
         receivedAt: Long = System.currentTimeMillis(),
     ) = SignedShelterReceipt(
         receipt = UnsignedShelterReceipt(
@@ -193,10 +193,10 @@ class BrokerStoreTest {
     @Test
     fun `pendingForShelter returns envelopes for correct shelter`() {
         val now = System.currentTimeMillis()
-        store.put(testEnvelope(envelopeId = "env-001", shelterId = "fuchu-01"), "dk1", now)
+        store.put(testEnvelope(envelopeId = "env-001", shelterId = "example-01"), "dk1", now)
         store.put(testEnvelope(envelopeId = "env-002", requestId = "req-002", shelterId = "other-01"), "dk2", now)
 
-        val batch = store.pendingForShelter("fuchu-01", now, null, 50, "gw-1")
+        val batch = store.pendingForShelter("example-01", now, null, 50, "gw-1")
         assertEquals(1, batch.envelopes.size)
         assertEquals("env-001", batch.envelopes[0].envelopeId)
     }
@@ -207,7 +207,7 @@ class BrokerStoreTest {
         store.put(testEnvelope(envelopeId = "env-expired", requestId = "req-exp", expiresAt = now - 1000), "dk1", now - 2000)
         store.put(testEnvelope(envelopeId = "env-active", requestId = "req-act"), "dk1", now)
 
-        val batch = store.pendingForShelter("fuchu-01", now, null, 50, "gw-1")
+        val batch = store.pendingForShelter("example-01", now, null, 50, "gw-1")
         assertEquals(1, batch.envelopes.size)
         assertEquals("env-active", batch.envelopes[0].envelopeId)
     }
@@ -219,20 +219,20 @@ class BrokerStoreTest {
         store.put(testEnvelope(envelopeId = "env-aaa"), "dk1", now)
         store.put(testEnvelope(envelopeId = "env-bbb", requestId = "req-002"), "dk1", now)
 
-        val batch1 = store.pendingForShelter("fuchu-01", now + 200, null, 1, "gw-1")
+        val batch1 = store.pendingForShelter("example-01", now + 200, null, 1, "gw-1")
         assertEquals(1, batch1.envelopes.size)
         assertEquals("env-aaa", batch1.envelopes[0].envelopeId)
         assertNotNull(batch1.cursor)
 
         // Composite cursor ensures env-bbb is not skipped
-        val batch2 = store.pendingForShelter("fuchu-01", now + 200, batch1.cursor, 1, "gw-1")
+        val batch2 = store.pendingForShelter("example-01", now + 200, batch1.cursor, 1, "gw-1")
         assertEquals(1, batch2.envelopes.size)
         assertEquals("env-bbb", batch2.envelopes[0].envelopeId)
     }
 
     @Test
     fun `pendingForShelter returns null cursor when no results`() {
-        val batch = store.pendingForShelter("fuchu-01", System.currentTimeMillis(), null, 50, "gw-1")
+        val batch = store.pendingForShelter("example-01", System.currentTimeMillis(), null, 50, "gw-1")
         assertTrue(batch.envelopes.isEmpty())
         assertNull(batch.cursor)
     }
@@ -277,12 +277,12 @@ class BrokerStoreTest {
     @Test
     fun `scoped gateway credential is hashed and becomes unusable after revocation`() {
         val now = System.currentTimeMillis()
-        val issued = store.issueGatewayCredential("gateway-a", "fuchu-01", now + 60_000, now)
+        val issued = store.issueGatewayCredential("gateway-a", "example-01", now + 60_000, now)
 
         val authenticated = store.authenticateGatewayCredential(issued.token, now + 1)
         assertNotNull(authenticated)
         assertEquals("gateway-a", authenticated!!.gatewayId)
-        assertEquals("fuchu-01", authenticated.shelterId)
+        assertEquals("example-01", authenticated.shelterId)
 
         DriverManager.getConnection("jdbc:sqlite:${dbFile.absolutePath}").use { connection ->
             connection.prepareStatement("SELECT token_hash FROM broker_gateway_credentials WHERE credential_id=?").use { query ->
@@ -303,7 +303,7 @@ class BrokerStoreTest {
         val now = System.currentTimeMillis()
         store.put(testEnvelope(envelopeId = "env-001"), "dk1", now)
         val receipt = testReceipt(receivedAt = now)
-        assertTrue(store.saveReceipt("fuchu-01", receipt, now))
+        assertTrue(store.saveReceipt("example-01", receipt, now))
     }
 
     @Test(expected = IllegalStateException::class)
@@ -311,7 +311,7 @@ class BrokerStoreTest {
         val now = System.currentTimeMillis()
         store.put(testEnvelope(), "dk1", now)
         store.saveReceipt(
-            "fuchu-01",
+            "example-01",
             testReceipt(requestId = "different-request"),
             now,
         )
@@ -326,14 +326,14 @@ class BrokerStoreTest {
                 requestId = "req-001",
                 requestVersion = 1,
                 ciphertextSha256Hex = "a".repeat(64),
-                shelterId = "fuchu-01",
+                shelterId = "example-01",
                 receivedAtEpochMillis = System.currentTimeMillis(),
                 status = ShelterReceiptStatus.ACCEPTED,
             ),
             signerKeyId = "signer-001",
             signatureBase64 = "D".repeat(88),
         )
-        store.saveReceipt("fuchu-01", receipt, System.currentTimeMillis())
+        store.saveReceipt("example-01", receipt, System.currentTimeMillis())
     }
 
     @Test
@@ -347,11 +347,11 @@ class BrokerStoreTest {
             receipt = UnsignedShelterReceipt(
                 receiptId = "rcpt-001", envelopeId = "env-001", requestId = "req-001",
                 requestVersion = 1, ciphertextSha256Hex = "a".repeat(64),
-                shelterId = "fuchu-01", receivedAtEpochMillis = now, status = ShelterReceiptStatus.ACCEPTED,
+                shelterId = "example-01", receivedAtEpochMillis = now, status = ShelterReceiptStatus.ACCEPTED,
             ),
             signerKeyId = "signer-001", signatureBase64 = "D".repeat(88),
         )
-        store.saveReceipt("fuchu-01", receipt1, now)
+        store.saveReceipt("example-01", receipt1, now)
 
         // Use capability token (not deviceKeyId directly)
         val batch = store.receiptsForDevice(reg.capabilityToken, 0)
@@ -372,7 +372,7 @@ class BrokerStoreTest {
         val envelope = testEnvelope()
         assertTrue(store.put(envelope, "origin", now) is BrokerPutResult.Stored)
         assertTrue(store.put(envelope, "courier", now + 1) is BrokerPutResult.Duplicate)
-        store.saveReceipt("fuchu-01", testReceipt(receivedAt = now + 2), now + 2)
+        store.saveReceipt("example-01", testReceipt(receivedAt = now + 2), now + 2)
 
         assertEquals(1, store.receiptsForDevice(origin.capabilityToken, 0).receipts.size)
         assertEquals(1, store.receiptsForDevice(courier.capabilityToken, 0).receipts.size)
@@ -394,15 +394,15 @@ class BrokerStoreTest {
         val now = System.currentTimeMillis()
         val first = testEnvelope(envelopeId = "env-zzz", expiresAt = now + 100)
         store.put(first, "dk1", now)
-        val firstPage = store.pendingForShelter("fuchu-01", now, null, 50, "gw")
+        val firstPage = store.pendingForShelter("example-01", now, null, 50, "gw")
         store.put(testEnvelope(envelopeId = "env-aaa", requestId = "req-2"), "dk1", now)
-        val secondPage = store.pendingForShelter("fuchu-01", now, firstPage.cursor, 50, "gw")
+        val secondPage = store.pendingForShelter("example-01", now, firstPage.cursor, 50, "gw")
         assertEquals(listOf("env-aaa"), secondPage.envelopes.map { it.envelopeId })
         store.purgeExpired(now + 7_200_000)
         store.close()
         store = BrokerStore(dbFile.absolutePath)
         store.put(testEnvelope(envelopeId = "env-000", requestId = "req-3"), "dk1", now - 10_000)
-        val afterRestart = store.pendingForShelter("fuchu-01", now, secondPage.cursor, 50, "gw")
+        val afterRestart = store.pendingForShelter("example-01", now, secondPage.cursor, 50, "gw")
         assertEquals(listOf("env-000"), afterRestart.envelopes.map { it.envelopeId })
     }
 
@@ -412,10 +412,10 @@ class BrokerStoreTest {
         val courier = store.registerDevice("courier", "key", now)
         val oldEnvelope = testEnvelope()
         store.put(oldEnvelope, "origin", now)
-        store.saveReceipt("fuchu-01", testReceipt(), now)
+        store.saveReceipt("example-01", testReceipt(), now)
         store.put(testEnvelope(envelopeId = "env-2", requestId = "req-2"), "courier", now)
         store.saveReceipt(
-            "fuchu-01", testReceipt(receiptId = "receipt-2", envelopeId = "env-2", requestId = "req-2"), now,
+            "example-01", testReceipt(receiptId = "receipt-2", envelopeId = "env-2", requestId = "req-2"), now,
         )
         val first = store.receiptsForDevice(courier.capabilityToken, 0)
         assertEquals(listOf("receipt-2"), first.receipts.map { it.receipt.receiptId })
@@ -435,7 +435,7 @@ class BrokerStoreTest {
         val now = System.currentTimeMillis()
         val courier = store.registerDevice("courier", "key", now)
         store.put(testEnvelope(expiresAt = now + 100), "courier", now)
-        store.saveReceipt("fuchu-01", testReceipt(), now)
+        store.saveReceipt("example-01", testReceipt(), now)
         store.close()
         var legacyCursor = 0L
         DriverManager.getConnection("jdbc:sqlite:${dbFile.absolutePath}").use { connection ->

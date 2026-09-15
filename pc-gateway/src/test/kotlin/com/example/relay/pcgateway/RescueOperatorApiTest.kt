@@ -28,7 +28,7 @@ class RescueOperatorApiTest {
         val config = GatewayConfig(
             profile = GatewayProfile.DEVELOPMENT,
             dbPath = Files.createTempFile("relay-rescue-ingress-gate", ".db").toString(),
-            shelterId = "fuchu-area",
+            shelterId = "regional-area",
         )
         val recipient = RescueCryptography.generateRecipientKeyPair()
         val signer = RescueCryptography.generateShelterSigningKeyPair()
@@ -51,7 +51,7 @@ class RescueOperatorApiTest {
         val config = GatewayConfig(
             profile = GatewayProfile.DEVELOPMENT,
             dbPath = Files.createTempFile("relay-rescue-development-ingress", ".db").toString(),
-            shelterId = "fuchu-area",
+            shelterId = "regional-area",
         )
         val recipient = RescueCryptography.generateRecipientKeyPair()
         val signer = RescueCryptography.generateShelterSigningKeyPair()
@@ -81,7 +81,7 @@ class RescueOperatorApiTest {
             profile = GatewayProfile.DEVELOPMENT,
             dbPath = Files.createTempFile("relay-rescue-api", ".db").toString(),
             adminKey = "staff-pin",
-            shelterId = "fuchu-area",
+            shelterId = "regional-area",
         )
         val recipient = RescueCryptography.generateRecipientKeyPair()
         val signer = RescueCryptography.generateShelterSigningKeyPair()

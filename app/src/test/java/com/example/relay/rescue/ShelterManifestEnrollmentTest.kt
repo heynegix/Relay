@@ -11,7 +11,7 @@ class ShelterManifestEnrollmentTest {
     private val recipient = RescueCryptography.generateRecipientKeyPair()
     private val signer = RescueCryptography.generateShelterSigningKeyPair()
 
-    private fun manifest(shelterId: String = "shelter-fuchu-01") = ShelterPublicKeyManifest(
+    private fun manifest(shelterId: String = "shelter-example-01") = ShelterPublicKeyManifest(
         shelterId = shelterId,
         recipientPublicKey = recipient.publicKey,
         receiptSigningPublicKey = signer.publicKey,
@@ -39,9 +39,9 @@ class ShelterManifestEnrollmentTest {
         val m = manifest()
         val store = FakeStore()
 
-        val keys = enrollment(m, store).enroll("192.168.50.20", 8443, m.fingerprint(), "shelter-fuchu-01")
+        val keys = enrollment(m, store).enroll("192.168.50.20", 8443, m.fingerprint(), "shelter-example-01")
 
-        assertEquals("shelter-fuchu-01", keys.shelterId)
+        assertEquals("shelter-example-01", keys.shelterId)
         assertEquals(m.fingerprint(), store.savedFingerprint)
     }
 
@@ -51,7 +51,7 @@ class ShelterManifestEnrollmentTest {
         val store = FakeStore()
 
         assertThrows(IllegalArgumentException::class.java) {
-            enrollment(m, store).enroll("192.168.50.20", 8443, m.fingerprint(), "shelter-fuchu-01")
+            enrollment(m, store).enroll("192.168.50.20", 8443, m.fingerprint(), "shelter-example-01")
         }
         assertNull("a mismatched manifest must never be persisted", store.saved)
     }
@@ -61,8 +61,8 @@ class ShelterManifestEnrollmentTest {
         val m = manifest()
         val store = FakeStore()
         val token = GatewayEnrollmentToken(
-            gatewayId = "pc-gateway-fuchu-01",
-            shelterId = "shelter-fuchu-01",
+            gatewayId = "pc-gateway-example-01",
+            shelterId = "shelter-example-01",
             host = "192.168.50.20",
             port = 8443,
             scheme = "https",
@@ -71,7 +71,7 @@ class ShelterManifestEnrollmentTest {
 
         val keys = enrollment(m, store).enrollShelterFor(token)
 
-        assertEquals("shelter-fuchu-01", keys.shelterId)
+        assertEquals("shelter-example-01", keys.shelterId)
         assertEquals(m.fingerprint(), store.savedFingerprint)
     }
 
@@ -80,8 +80,8 @@ class ShelterManifestEnrollmentTest {
         val m = manifest(shelterId = "shelter-somewhere-else")
         val store = FakeStore()
         val token = GatewayEnrollmentToken(
-            gatewayId = "pc-gateway-fuchu-01",
-            shelterId = "shelter-fuchu-01",
+            gatewayId = "pc-gateway-example-01",
+            shelterId = "shelter-example-01",
             host = "192.168.50.20",
             port = 8443,
             scheme = "https",

@@ -23,7 +23,7 @@ class OfficialInformationServiceProvenanceTest {
 
     private val warningJson = """
         {"reportDatetime":"2026-07-26T09:00:00+09:00","headlineText":"大雨警報を発表",
-         "areaTypes":[{"areas":[{"code":"3430200","warnings":[{"code":"03","status":"発表"}]}]}]}
+         "areaTypes":[{"areas":[{"code":"0000000","warnings":[{"code":"03","status":"発表"}]}]}]}
     """.trimIndent()
 
     private fun cachePath(): Path = temp.newFolder("official").toPath().resolve("jma.json")

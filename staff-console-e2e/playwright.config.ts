@@ -49,7 +49,7 @@ export default defineConfig({
       RELAY_PROFILE: "development",
       RELAY_GATEWAY_HOST: "127.0.0.1",
       RELAY_GATEWAY_PORT: String(PORT),
-      RELAY_SHELTER_ID: "fuchu-01",
+      RELAY_SHELTER_ID: "example-01",
       RELAY_GATEWAY_ID: "pc-gateway-e2e",
       RELAY_GATEWAY_DB: path.join(tmpRoot, "gateway.db"),
       RELAY_RESCUE_KEY_FILE: path.join(tmpRoot, "rescue-keys.json"),

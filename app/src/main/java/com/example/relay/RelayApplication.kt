@@ -58,6 +58,7 @@ import com.example.relay.rescue.ShelterManifestEnrollment
 import com.example.relay.rescue.DevelopmentShelterManifestBootstrap
 import com.example.relay.rescue.BrokerShelterManifestBootstrap
 import com.example.relay.rescue.RegionalShelterDirectoryResolver
+import com.example.relay.regional.AndroidRegionalDeploymentProfile
 import com.example.relay.rescue.SignedRegionalShelterDirectory
 import com.example.relay.rescue.ble.AndroidShelterBleClient
 import com.example.relay.rescue.ble.SharedPreferencesCourierDeliveryIdStore
@@ -92,6 +93,7 @@ class RelayApplication : Application() {
         }
     }
     val diagnostics: RelayDiagnosticStore by lazy { RelayDiagnosticStore(this) }
+    val regionalDeploymentProfile: AndroidRegionalDeploymentProfile by lazy { AndroidRegionalDeploymentProfile.load(this) }
 
     val database: RelayDatabase by lazy {
         System.loadLibrary("sqlcipher")

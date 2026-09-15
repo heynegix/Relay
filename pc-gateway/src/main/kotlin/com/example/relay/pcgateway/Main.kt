@@ -102,8 +102,16 @@ fun main(args: Array<String>) {
         config.retentionSweepIntervalMillis,
         TimeUnit.MILLISECONDS,
     )
-    val offlineMap = GsiTileCache(Path.of(config.offlineMapPath))
-    val officialInformation = OfficialInformationService(Path.of(config.officialInfoCachePath))
+    val offlineMap = OfflineMapTileCache(
+        root = Path.of(config.offlineMapPath),
+        profile = config.regionalProfile.map,
+        regionId = config.regionalProfile.regionId,
+        regionName = config.regionalProfile.displayName,
+    )
+    val officialInformation = OfficialInformationService(
+        cachePath = Path.of(config.officialInfoCachePath),
+        profile = config.regionalProfile,
+    )
     val rescueIngress = rescueDeliveryReady.let { ready -> if (ready) RescueDeliveryIngress(rescueIntakeService, routeType = RouteType.NEARBY, routeAttemptSink = store.pilotOperationsStore()::recordRouteAttempt) else null }
     val beacon = GatewayLanBeacon(config, rescueTrustReady = rescueDeliveryReady)
     val consoleHost = if (config.host in setOf("0.0.0.0", "::")) "127.0.0.1" else config.host

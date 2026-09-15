@@ -91,7 +91,7 @@ class BrokerRoutesTest {
         envelopeId: String = "env-001",
         requestId: String = "req-001",
         requestVersion: Int = 1,
-        shelterId: String = "fuchu-01",
+        shelterId: String = "example-01",
         ciphertextHash: String = "a".repeat(64),
         createdAt: Long = System.currentTimeMillis(),
         expiresAt: Long = System.currentTimeMillis() + 3_600_000,
@@ -209,10 +209,10 @@ class BrokerRoutesTest {
             contentType(ContentType.Application.Json)
             setBody(uploadJson(testEnvelope()))
         }
-        val credential = store.issueGatewayCredential("gateway-fuchu", "fuchu-01", System.currentTimeMillis() + 60_000)
-        val response = client.get("/v1/gateways/fuchu-01/pull") {
+        val credential = store.issueGatewayCredential("gateway-regional", "example-01", System.currentTimeMillis() + 60_000)
+        val response = client.get("/v1/gateways/example-01/pull") {
             header("Authorization", "Bearer ${credential.token}")
-            header("X-Gateway-Id", "gateway-fuchu")
+            header("X-Gateway-Id", "gateway-regional")
         }
         assertEquals(HttpStatusCode.OK, response.status)
         val body = response.bodyAsText()
@@ -234,14 +234,14 @@ class BrokerRoutesTest {
     @Test
     fun `pull requires scoped credential`() = testApplication {
         application { brokerModule(store, BrokerConfig(profile = BrokerProfile.PRODUCTION)) }
-        val response = client.get("/v1/gateways/fuchu-01/pull")
+        val response = client.get("/v1/gateways/example-01/pull")
         assertEquals(HttpStatusCode.Unauthorized, response.status)
     }
 
     @Test
     fun `credential cannot pull another shelter queue`() = testApplication {
         application { brokerModule(store, BrokerConfig(profile = BrokerProfile.PRODUCTION)) }
-        val credential = store.issueGatewayCredential("gateway-a", "fuchu-01", System.currentTimeMillis() + 60_000)
+        val credential = store.issueGatewayCredential("gateway-a", "example-01", System.currentTimeMillis() + 60_000)
         val response = client.get("/v1/gateways/other-shelter/pull") {
             header("Authorization", "Bearer ${credential.token}")
             header("X-Gateway-Id", "gateway-a")
@@ -253,7 +253,7 @@ class BrokerRoutesTest {
     @Test
     fun `credential cannot upload receipt for another shelter`() = testApplication {
         application { brokerModule(store, BrokerConfig(profile = BrokerProfile.PRODUCTION)) }
-        val credential = store.issueGatewayCredential("gateway-a", "fuchu-01", System.currentTimeMillis() + 60_000)
+        val credential = store.issueGatewayCredential("gateway-a", "example-01", System.currentTimeMillis() + 60_000)
         val receipt = BrokerReceiptUpload(
             receipt = com.example.relay.rescue.SignedShelterReceipt(
                 receipt = com.example.relay.rescue.UnsignedShelterReceipt(

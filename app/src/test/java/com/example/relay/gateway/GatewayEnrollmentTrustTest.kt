@@ -15,8 +15,8 @@ import org.junit.Test
 class GatewayEnrollmentTrustTest {
     private val fingerprint = "c".repeat(64)
     private val enrolled = GatewayEnrollmentToken(
-        gatewayId = "pc-gateway-fuchu-01",
-        shelterId = "shelter-fuchu-01",
+        gatewayId = "pc-gateway-example-01",
+        shelterId = "shelter-example-01",
         host = "192.168.50.20",
         port = 8443,
         scheme = "https",

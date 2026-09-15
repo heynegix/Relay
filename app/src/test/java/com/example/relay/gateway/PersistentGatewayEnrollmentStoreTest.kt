@@ -11,8 +11,8 @@ class PersistentGatewayEnrollmentStoreTest {
     private val other = "b".repeat(64)
 
     private fun token(
-        gatewayId: String = "pc-gateway-fuchu-01",
-        shelterId: String = "shelter-fuchu-01",
+        gatewayId: String = "pc-gateway-example-01",
+        shelterId: String = "shelter-example-01",
         host: String = "192.168.50.20",
         port: Int = 8443,
         scheme: String = "https",
@@ -54,9 +54,9 @@ class PersistentGatewayEnrollmentStoreTest {
         val trusted = DiscoveredGateway(
             host = "172.16.4.4",
             port = 8443,
-            gatewayId = "pc-gateway-fuchu-01",
+            gatewayId = "pc-gateway-example-01",
             scheme = "https",
-            shelterId = "shelter-fuchu-01",
+            shelterId = "shelter-example-01",
         )
         assertEquals(GatewayTrustDecision.TRUSTED, restarted.enrollmentStore().decisionFor(trusted))
     }
@@ -85,7 +85,7 @@ class PersistentGatewayEnrollmentStoreTest {
         assertTrue(result is GatewayEnrollmentImport.Conflict)
         // The original identity must be untouched: a spoofed re-enroll cannot displace it.
         assertEquals(fingerprint, store.enrolledTokens().single().manifestFingerprint)
-        assertEquals("shelter-fuchu-01", store.enrolledTokens().single().shelterId)
+        assertEquals("shelter-example-01", store.enrolledTokens().single().shelterId)
     }
 
     @Test
@@ -94,7 +94,7 @@ class PersistentGatewayEnrollmentStoreTest {
         val store = PersistentGatewayEnrollmentStore(storage)
         store.enroll(token())
 
-        val rotated = token(shelterId = "shelter-fuchu-02", manifestFingerprint = other)
+        val rotated = token(shelterId = "shelter-regional-02", manifestFingerprint = other)
         val result = store.enroll(rotated, allowRotation = true)
 
         assertTrue(result is GatewayEnrollmentImport.Rotated)
@@ -145,7 +145,7 @@ class PersistentGatewayEnrollmentStoreTest {
         val store = PersistentGatewayEnrollmentStore(storage)
         store.enroll(token())
 
-        assertTrue(store.forget("pc-gateway-fuchu-01"))
+        assertTrue(store.forget("pc-gateway-example-01"))
         assertTrue(store.enrolledTokens().isEmpty())
         assertTrue(storage.payloads.isEmpty())
         assertFalse("forgetting an unknown gateway reports no change", store.forget("nope"))
@@ -160,9 +160,9 @@ class PersistentGatewayEnrollmentStoreTest {
         val spoof = DiscoveredGateway(
             host = "10.0.0.9",
             port = 8080,
-            gatewayId = "pc-gateway-fuchu-01",
+            gatewayId = "pc-gateway-example-01",
             scheme = "http",
-            shelterId = "shelter-fuchu-01",
+            shelterId = "shelter-example-01",
         )
         assertEquals(GatewayTrustDecision.REJECTED, store.enrollmentStore().decisionFor(spoof))
         assertNull(store.enrollmentStore().trustedTokenFor(spoof))

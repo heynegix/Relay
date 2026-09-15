@@ -175,7 +175,7 @@ class ActiveRescueSessionCoordinatorTest {
 
     @Test
     fun `tracking consent is off by default and a location update is refused before opt-in`() = runBlocking {
-        val location = MutableLocationProvider(GeoFix(34.392, 132.504, 5f, 1_000))
+        val location = MutableLocationProvider(GeoFix(0.0, 0.0, 5f, 1_000))
         val fixture = fixture(locationProvider = location)
         val created = fixture.coordinator.create(draft()) as RescueSessionOperationResult.Stored
         val requestId = created.value.session.requestId
@@ -195,7 +195,7 @@ class ActiveRescueSessionCoordinatorTest {
 
     @Test
     fun `consent durably enables tracking and a consented update emits a fresh encrypted fix`() = runBlocking {
-        val location = MutableLocationProvider(GeoFix(34.392, 132.504, 5f, 1_000))
+        val location = MutableLocationProvider(GeoFix(0.0, 0.0, 5f, 1_000))
         val fixture = fixture(locationProvider = location)
         val created = fixture.coordinator.create(draft()) as RescueSessionOperationResult.Stored
         val requestId = created.value.session.requestId
@@ -223,7 +223,7 @@ class ActiveRescueSessionCoordinatorTest {
 
     @Test
     fun `withdrawing consent disables tracking, stops updates, and is idempotent`() = runBlocking {
-        val location = MutableLocationProvider(GeoFix(34.392, 132.504, 5f, 1_000))
+        val location = MutableLocationProvider(GeoFix(0.0, 0.0, 5f, 1_000))
         val fixture = fixture(locationProvider = location)
         val created = fixture.coordinator.create(draft()) as RescueSessionOperationResult.Stored
         val requestId = created.value.session.requestId

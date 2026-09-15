@@ -54,6 +54,7 @@ import com.example.relay.permissions.AndroidNearbyPermissionGate
 import com.example.relay.permissions.NearbyPrerequisite
 import com.example.relay.permissions.NearbyPrerequisiteChecker
 import com.example.relay.RelayApplication
+import com.example.relay.regional.AndroidRegionalDeploymentProfile
 import com.example.relay.service.RelayCommunicationService
 import com.example.relay.service.RescueDeliveryService
 import com.example.relay.service.shouldAutoStartCommunication
@@ -181,7 +182,7 @@ fun RelayApp(viewModel: RelayViewModel, rescueViewModel: RescueViewModel, enroll
             )
             RelayScreen.SAFETY_FORM -> SafetyForm(viewModel)
             RelayScreen.SUPPLY_FORM -> SupplyForm(viewModel)
-            RelayScreen.REGIONAL -> OfficialInformationScreen(viewModel::navigate)
+            RelayScreen.REGIONAL -> OfficialInformationScreen(viewModel::navigate, app.regionalDeploymentProfile)
             RelayScreen.SETTINGS -> SettingsScreen(
                 state = state,
                 backgroundState = backgroundState,
@@ -269,7 +270,7 @@ private fun HomeScreen(
                         .fillMaxWidth()
                         .height(56.dp)
                         .semantics { contentDescription = "地域情報を見る" },
-                ) { Text("府中町の公式防災情報を見る") }
+                ) { Text("設定地域の公式防災情報を見る") }
             }
             state.lastError?.let { error ->
                 item {
@@ -358,17 +359,13 @@ private fun NumberChooser(label: String, value: Int, min: Int, max: Int, update:
 }
 
 @Composable
-private fun OfficialInformationScreen(navigate: (RelayScreen) -> Unit) {
+private fun OfficialInformationScreen(navigate: (RelayScreen) -> Unit, profile: AndroidRegionalDeploymentProfile) {
     val uriHandler = LocalUriHandler.current
-    val sources = listOf(
-        OfficialSource("府中町 防災・危機管理", "避難所・防災・緊急時のお知らせ", "https://www.town.fuchu.hiroshima.jp/life/1/6/"),
-        OfficialSource("府中町 指定避難所", "町が公開する指定避難所一覧", "https://www.town.fuchu.hiroshima.jp/site/kikikannrika/2030.html"),
-        OfficialSource("広島県 防災Web", "警報・避難・河川などの県公式情報", "https://www.bousai.pref.hiroshima.jp/"),
-        OfficialSource("気象庁 府中町の警報・注意報", "気象庁が発表する府中町の最新情報", "https://www.jma.go.jp/bosai/warning/#area_type=class20s&area_code=3430200"),
-    )
+    val sources = profile.officialSources.map { OfficialSource(it.title, it.description, it.url) }
+
     MainScaffold(RelayScreen.REGIONAL, navigate) { modifier ->
         LazyColumn(modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            item { Text("府中町の公式防災情報", style = MaterialTheme.typography.headlineMedium) }
+            item { Text("設定地域の公式防災情報", style = MaterialTheme.typography.headlineMedium) }
             item {
                 Card(Modifier.fillMaxWidth()) {
                     Text(
@@ -377,6 +374,7 @@ private fun OfficialInformationScreen(navigate: (RelayScreen) -> Unit) {
                     )
                 }
             }
+            if (sources.isEmpty()) item { Text("公式リンクは地域プロファイルで設定されていません。") }
             items(sources, key = { it.url }) { source ->
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

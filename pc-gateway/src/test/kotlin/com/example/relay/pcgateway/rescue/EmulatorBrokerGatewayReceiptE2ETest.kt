@@ -60,8 +60,8 @@ import org.junit.Test
 class EmulatorBrokerGatewayReceiptE2ETest {
     private val wire = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
-    private val shelterId = "fuchu-01"
-    private val gatewayId = "gateway-fuchu"
+    private val shelterId = "example-01"
+    private val gatewayId = "gateway-regional"
     private val deviceKeyId = "member-device-uuid"
     private val envelopeId = "env-e2e-1"
     private val requestId = "req-e2e-1"

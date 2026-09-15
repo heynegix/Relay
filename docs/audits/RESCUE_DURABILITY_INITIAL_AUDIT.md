@@ -48,7 +48,7 @@ physical-device result.
 - `ShelterDeliveryCoordinator` compares the scan-advertised fingerprint with the GATT identity
   itself before resolving a Directory entry. The Android BLE client performs the same comparison;
   this duplicate check prevents a replacement/fake client from weakening the invariant.
-- Removed startup use of the unsigned bundled Fuchu manifest and removed automatic debug TOFU
+- Removed startup use of the unsigned bundled Regional manifest and removed automatic debug TOFU
   enrollment. Existing explicit enrollment remains the only legacy public-key path.
 - Test roots are generated at runtime in test source. No fixed test private key, Root bundle, or
   Directory artifact is added to `main`, `release`, or `pilotRelease` source sets.

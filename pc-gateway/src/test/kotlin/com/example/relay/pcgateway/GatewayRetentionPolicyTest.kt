@@ -33,7 +33,7 @@ class GatewayRetentionPolicyTest {
         retentionSweepIntervalMinutes = sweepMinutes,
         bleBridgeSharedSecret = testSecret,
         adminKey = "staff-pin",
-        shelterId = "fuchu-area",
+        shelterId = "regional-area",
     )
 
     @Test

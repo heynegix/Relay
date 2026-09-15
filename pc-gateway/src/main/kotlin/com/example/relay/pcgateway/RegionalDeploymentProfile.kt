@@ -101,7 +101,8 @@ data class RegionalOfficialSource(val title: String, val organization: String, v
 
 private fun validateHttps(value: String) {
     val uri = runCatching { URI(value) }.getOrNull()
-    require(uri?.scheme.equals("https", true) && !uri.host.isNullOrBlank() && uri.userInfo == null && uri.query == null && uri.fragment == null) {
+    require(uri != null && uri.scheme.equals("https", true) && !uri.host.isNullOrBlank() &&
+        uri.userInfo == null && uri.query == null && uri.fragment == null) {
         "official endpoints must be HTTPS URLs without credentials, query, or fragments"
     }
 }

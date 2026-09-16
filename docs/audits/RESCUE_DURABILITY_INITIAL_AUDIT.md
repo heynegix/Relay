@@ -120,7 +120,7 @@ Test code added or extended:
 - `verifyNoTestTrustArtifactsInReleaseApks` builds both release-derived APKs and rejects any
   packaged test asset, `TEST ONLY` trust content, or private-Root JSON field.
 
-Executed from `C:\Users\matubayasi\Documents\Relay` on 2026-07-22 (the client time limit
+Executed from `[redacted local path]` on 2026-07-22 (the client time limit
 expired for some commands, but the Gradle daemon recorded the successful result):
 
 ```text

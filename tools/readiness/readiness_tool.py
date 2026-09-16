@@ -175,19 +175,18 @@ def render_readme_block(status: dict) -> str:
     lines = [
         README_BEGIN,
         "> [!NOTE]",
-        "> この節は `docs/readiness/status.yml`（唯一の正）から自動生成されます。手で編集しないでください。",
+        "> This section is generated from `docs/readiness/status.yml`, the single source of truth. Do not edit it by hand.",
         ">",
-        f"> **status基準: {status['status_date']} / commit `{status['source_commit']}` / branch `{status['branch']}`**",
+        f"> **Readiness snapshot: {status['status_date']} / commit `{status['source_commit']}` / branch `{status['branch']}`**",
         ">",
-        f"> 管理対象 {c['total']}機能: 実装済み {c['implemented']} / 未実装 {c['not_implemented']} / "
-        f"自動試験済み {c['automated_tested']} / emulator検証済み {c['emulator_tested']} / "
-        f"**実機検証済み {c['device_tested']} / 現地検証済み {c['field_tested']}** / "
-        f"外部判断待ちを含む {c['blocked_external']}",
+        f"> Tracked features: {c['total']} total; {c['implemented']} implemented; {c['not_implemented']} not implemented; "
+        f"{c['automated_tested']} automatically tested; {c['emulator_tested']} emulator-tested; "
+        f"**{c['device_tested']} device-tested / {c['field_tested']} field-tested**; "
+        f"{c['blocked_external']} with external decisions or blockers.",
         ">",
-        "> IMPLEMENTEDやAUTOMATED_TESTEDはDEVICE_TESTED・FIELD_TESTEDを意味しません。"
-        "全機能の軸別状態は [READINESS_TABLE](docs/readiness/READINESS_TABLE.md)、"
-        "未完了項目は [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md)、"
-        "自治体向け要約は [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) を参照してください。",
+        "> `IMPLEMENTED` and `AUTOMATED_TESTED` never mean `DEVICE_TESTED` or `FIELD_TESTED`. See the "
+        "[readiness table](docs/readiness/READINESS_TABLE.md), [open items](docs/readiness/OPEN_ITEMS.md), "
+        "and [readiness summary](docs/readiness/MUNICIPAL_SUMMARY.md) for the per-feature evidence.",
         README_END,
     ]
     return "\n".join(lines)

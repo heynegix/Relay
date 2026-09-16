@@ -1,0 +1,94 @@
+name: Bug report
+description: Report a reproducible Relay problem using synthetic data only.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include rescue content, GPS, credentials, private keys, or other sensitive data.
+        If this may be a security vulnerability, stop and follow [SECURITY.md](https://github.com/heynegix/Relay/blob/main/SECURITY.md) instead of publishing details here.
+  - type: input
+    id: version
+    attributes:
+      label: Relay version or commit
+      description: Provide a release tag, development-preview tag, or full commit SHA.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Android app
+        - PC Gateway
+        - HTTPS Broker
+        - Shared/protocol library
+        - iOS/Apple preview
+        - Build/CI/release tooling
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: android_version
+    attributes:
+      label: Android version
+      description: Required for Android reports; otherwise write N/A.
+      placeholder: "Android 14 / N/A"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Nearby
+        - BLE
+        - LAN / Gateway
+        - HTTPS Broker
+        - Local storage / migration
+        - Encryption / signing / trust
+        - UI / permissions
+        - Build / CI
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Use synthetic records and a test environment.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs
+      description: Remove tokens, keys, GPS, rescue text, cookies, and personal identifiers. Paste only the relevant excerpt.
+  - type: textarea
+    id: safety_impact
+    attributes:
+      label: Safety impact
+      description: Explain whether this affects delivery-state honesty, data loss, operator decisions, or only development tooling.
+    validations:
+      required: true
+  - type: checkboxes
+    id: security_check
+    attributes:
+      label: Security and privacy confirmation
+      options:
+        - label: I checked SECURITY.md and this public report does not disclose a suspected vulnerability or sensitive data.
+          required: true

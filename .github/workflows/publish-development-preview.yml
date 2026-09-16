@@ -10,7 +10,7 @@ on:
       target_ref:
         description: Immutable commit SHA, branch, or tag to package
         required: true
-        default: agent/zero-operation-relay
+        default: main
         type: string
 
 # This workflow is intentionally separate from "Publish Relay formal release". It publishes a

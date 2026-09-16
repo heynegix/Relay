@@ -1,0 +1,33 @@
+name: Documentation improvement
+description: Report unclear, stale, missing, or misleading project documentation.
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Documentation location
+      description: Path or URL, such as README.md, CONTRIBUTING.md, or a docs page.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is unclear or incorrect?
+    validations:
+      required: true
+  - type: textarea
+    id: improvement
+    attributes:
+      label: Suggested improvement
+      description: Include corrected commands, links, or wording where possible.
+    validations:
+      required: true
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety and accuracy confirmation
+      options:
+        - label: I will not add unsupported claims about field testing, production readiness, security audits, adoption, or emergency-service use.
+          required: true

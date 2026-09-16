@@ -8,13 +8,13 @@
 
 **Relay is an open-source disaster-communication project that encrypts rescue information on Android devices and relays it through available paths — Nearby, local LAN, or an HTTPS Broker — toward a PC Gateway at a rescue coordination point.**
 
-[![Relay CI](https://github.com/heynegix/Relay/actions/workflows/relay-ci.yml/badge.svg?branch=agent%2Fzero-operation-relay)](https://github.com/heynegix/Relay/actions/workflows/relay-ci.yml)
+[![Relay CI](https://github.com/heynegix/Relay/actions/workflows/relay-ci.yml/badge.svg?branch=main)](https://github.com/heynegix/Relay/actions/workflows/relay-ci.yml)
 [![Android](https://img.shields.io/badge/Android-6.0%2B-3DDC84?logo=android&logoColor=white)](#development-environment)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3.21-7F52FF?logo=kotlin&logoColor=white)](#development-environment)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-development%20preview-F59E0B)](#project-status)
 
-[Overview](#relay-in-30-seconds) · [Screenshots](#screenshots) · [Status](#project-status) · [Quick start](#quick-start) · [Architecture](#how-relay-works) · [Verification](#verification) · [Contributing](#contributing) · [Docs](#documentation)
+[Overview](#relay-in-30-seconds) · [Screenshots](#screenshots) · [Status](#project-status) · [Quick start](#quick-start) · [Architecture](#how-relay-works) · [Verification](#verification) · [Security](#security-model) · [Contributing](#contributing) · [Roadmap](ROADMAP.md) · [Docs](#documentation)
 
 </div>
 
@@ -51,6 +51,10 @@ Relay is built around three principles:
 
 The goal is not to make communication *look* successful. The goal is to represent **how far a request has actually progressed** as honestly as possible.
 
+### Why open source?
+
+Relay handles sensitive communication and failure-prone transport boundaries. Keeping the source, protocol rules, readiness evidence, and limitations public lets independent developers inspect the design, reproduce tests, report security issues, and contribute validation without confusing automated tests with real-world readiness.
+
 ---
 
 ## Screenshots
@@ -63,7 +67,7 @@ The goal is not to make communication *look* successful. The goal is to represen
 
 ## Project status
 
-Relay currently includes an Android application, a PC Gateway, an HTTPS Broker, local drill/pilot features, and automated security and quality checks.
+Relay currently includes an Android application, a PC Gateway, an HTTPS Broker, local drill features, and automated security and quality checks. It is a **development preview**, not a production emergency service.
 
 > **Implemented ≠ tested on physical devices ≠ field-ready.**
 
@@ -83,13 +87,13 @@ The machine-readable source of truth for readiness is [`docs/readiness/status.ym
 
 <!-- BEGIN GENERATED: readiness-summary (tools/readiness/readiness_tool.py; edit docs/readiness/status.yml instead) -->
 > [!NOTE]
-> この節は `docs/readiness/status.yml`（唯一の正）から自動生成されます。手で編集しないでください。
+> This section is generated from `docs/readiness/status.yml`, the single source of truth. Do not edit it by hand.
 >
-> **status基準: 2026-07-29 / commit `23bd1da` / branch `agent/zero-operation-relay`**
+> **Readiness snapshot: 2026-09-16 / commit `3af3538` / branch `main`**
 >
-> 管理対象 50機能: 実装済み 46 / 未実装 3 / 自動試験済み 43 / emulator検証済み 1 / **実機検証済み 0 / 現地検証済み 0** / 外部判断待ちを含む 7
+> Tracked features: 50 total; 46 implemented; 3 not implemented; 43 automatically tested; 1 emulator-tested; **0 device-tested / 0 field-tested**; 7 with external decisions or blockers.
 >
-> IMPLEMENTEDやAUTOMATED_TESTEDはDEVICE_TESTED・FIELD_TESTEDを意味しません。全機能の軸別状態は [READINESS_TABLE](docs/readiness/READINESS_TABLE.md)、未完了項目は [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md)、自治体向け要約は [MUNICIPAL_SUMMARY](docs/readiness/MUNICIPAL_SUMMARY.md) を参照してください。
+> `IMPLEMENTED` and `AUTOMATED_TESTED` never mean `DEVICE_TESTED` or `FIELD_TESTED`. See the [readiness table](docs/readiness/READINESS_TABLE.md), [open items](docs/readiness/OPEN_ITEMS.md), and [readiness summary](docs/readiness/MUNICIPAL_SUMMARY.md) for the per-feature evidence.
 <!-- END GENERATED: readiness-summary -->
 
 </details>
@@ -336,6 +340,8 @@ See [OPEN_ITEMS](docs/readiness/OPEN_ITEMS.md) and [BLOCKED_BY_EXTERNAL_DECISION
 
 ## Contributing
 
+Start with [`CONTRIBUTING.md`](CONTRIBUTING.md), which documents the supported development environment, checks, branch/commit/PR expectations, security handling, and the evidence required for device or readiness changes.
+
 Relay currently benefits more from **independent validation on physical devices, real networks, and realistic operating conditions** than from simply adding more features.
 
 Especially useful contributions include:
@@ -347,7 +353,7 @@ Especially useful contributions include:
 - Reviewing privacy, key management, failure handling, and data retention.
 - Reporting bugs, adding tests, improving documentation, and submitting pull requests.
 
-Found a problem? Open an [Issue](https://github.com/heynegix/Relay/issues). For security issues, do **not** post sensitive details publicly; follow the [Security Policy](SECURITY.md).
+Found a problem? Open an [Issue](https://github.com/heynegix/Relay/issues) using the appropriate template. For security issues, do **not** post sensitive details publicly; follow the [Security Policy](SECURITY.md). Planned work and safe starter tasks are tracked in [`ROADMAP.md`](ROADMAP.md) and GitHub Issues.
 
 ---
 
@@ -392,6 +398,9 @@ Key versions:
 ### Security & API
 
 - [Security Policy](SECURITY.md)
+- [Threat model](docs/security/THREAT_MODEL.md)
+- [Security architecture](docs/security/SECURITY_ARCHITECTURE.md)
+- [Trust boundaries](docs/security/TRUST_BOUNDARIES.md)
 - [Dependency verification](docs/security/DEPENDENCY_VERIFICATION.md)
 - [Branch protection](docs/security/BRANCH_PROTECTION.md)
 - [Broker OpenAPI 3.1](docs/api/broker-openapi.yaml)

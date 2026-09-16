@@ -12,7 +12,7 @@ Before starting, ensure you have:
 
 - A Codemagic account (free tier supports 500 build minutes/month for iOS)
 - An Apple Developer Program membership ($99/year) — required only for signed builds
-- Access to the NEGI46/Relay GitHub repository
+- Access to the heynegix/Relay GitHub repository
 
 ---
 
@@ -22,7 +22,7 @@ Before starting, ensure you have:
 2. Click **"Add application"**
 3. Select **GitHub** as the repository provider
 4. Authorize Codemagic to access your GitHub account (if not already done)
-5. Select the repository: `NEGI46/Relay`
+5. Select the repository: `heynegix/Relay`
 6. Choose **"codemagic.yaml"** as the project type (not Flutter or native iOS)
 7. Click **"Finish: Add application"**
 
@@ -32,7 +32,7 @@ Before starting, ensure you have:
 
 1. In the application settings, go to **"Build triggers"**
 2. Ensure the branch pattern includes: `quest/ios-codemagic-foundation`
-3. For production, add patterns for `main`, `agent/zero-operation-relay`
+3. For production, add the `main` pattern
 4. **Manual trigger only** is configured in the YAML — no automatic webhooks fire
 
 ---

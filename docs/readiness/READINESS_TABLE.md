@@ -4,7 +4,7 @@
 
 # Relay readiness table
 
-Status date: **2026-07-29** / commit `23bd1da` / branch `agent/zero-operation-relay`
+Status date: **2026-09-16** / commit `3af3538` / branch `main`
 
 > Relayは119、消防・警察・自治体の公式な緊急連絡手段の代替ではありません。 本ファイルのどの状態も、実災害での救助や自治体・消防の承認を保証しません。
 

@@ -2,7 +2,7 @@ name: OpenSSF Scorecard
 
 on:
   push:
-    branches: [main, agent/zero-operation-relay]
+    branches: [main]
   schedule:
     - cron: '15 3 * * 1'
   workflow_dispatch:

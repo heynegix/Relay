@@ -17,6 +17,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 
+/** Inclusive HTTP success window; anything outside is a transport failure, not a delivery. */
+private const val MIN_HTTP_SUCCESS_STATUS = 200
+private const val MAX_HTTP_SUCCESS_STATUS = 299
+
 /**
  * Zero-operation public LAN ingress — same contract as Android [HttpGatewayBridgeClient.pushPublic]
  * and PC Gateway `POST /api/public/sync/messages`.
@@ -48,8 +52,8 @@ class GatewayPublicClient(
         }
         val text: String = response.body()
         // Match the Android client: an error body must not be reported as a transport success.
-        if (response.status.value !in 200..299) {
-            throw IllegalStateException("gateway HTTP ${response.status.value}")
+        if (response.status.value !in MIN_HTTP_SUCCESS_STATUS..MAX_HTTP_SUCCESS_STATUS) {
+            error("gateway HTTP ${response.status.value}")
         }
         return json.decodeFromString(SyncMessagesResponse.serializer(), text)
     }

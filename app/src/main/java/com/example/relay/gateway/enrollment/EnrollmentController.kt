@@ -1,6 +1,8 @@
 package com.example.relay.gateway.enrollment
 
+import com.example.relay.gateway.GatewayEnrollmentCodec
 import com.example.relay.gateway.GatewayEnrollmentImport
+import com.example.relay.gateway.GatewayEnrollmentResult
 import com.example.relay.gateway.GatewayEnrollmentToken
 import com.example.relay.gateway.PersistentGatewayEnrollmentStore
 
@@ -63,11 +65,11 @@ class EnrollmentController(
             return EnrollmentUiState.Error("Invalid characters in input")
         }
 
-        return when (val result = com.example.relay.gateway.GatewayEnrollmentCodec.decodeQrPayload(payload)) {
-            is com.example.relay.gateway.GatewayEnrollmentResult.Rejected -> {
+        return when (val result = GatewayEnrollmentCodec.decodeQrPayload(payload)) {
+            is GatewayEnrollmentResult.Rejected -> {
                 EnrollmentUiState.Error("Invalid enrollment data: ${result.reason.name}")
             }
-            is com.example.relay.gateway.GatewayEnrollmentResult.Enrolled -> {
+            is GatewayEnrollmentResult.Enrolled -> {
                 val token = result.token
                 pendingToken = token
                 // Check for existing enrollment conflict
@@ -75,7 +77,9 @@ class EnrollmentController(
                 val isConflict = existing != null && existing != token
                 EnrollmentUiState.PendingConfirmation(
                     token = token,
-                    formattedFingerprint = com.example.relay.gateway.GatewayEnrollmentCodec.formatManualFingerprint(token.manifestFingerprint),
+                    formattedFingerprint = GatewayEnrollmentCodec.formatManualFingerprint(
+                        token.manifestFingerprint,
+                    ),
                     isConflict = isConflict,
                     existingToken = if (isConflict) existing else null,
                 )
@@ -91,9 +95,12 @@ class EnrollmentController(
         val token = pendingToken ?: return EnrollmentUiState.Error("No pending enrollment")
 
         return when (val result = store.enroll(token, allowRotation)) {
-            is GatewayEnrollmentImport.Added -> EnrollmentUiState.Success(result.token).also { pendingToken = null }
-            is GatewayEnrollmentImport.Rotated -> EnrollmentUiState.Success(result.token, wasRotation = true).also { pendingToken = null }
-            is GatewayEnrollmentImport.AlreadyEnrolled -> EnrollmentUiState.Success(result.token).also { pendingToken = null }
+            is GatewayEnrollmentImport.Added ->
+                EnrollmentUiState.Success(result.token).also { pendingToken = null }
+            is GatewayEnrollmentImport.Rotated ->
+                EnrollmentUiState.Success(result.token, wasRotation = true).also { pendingToken = null }
+            is GatewayEnrollmentImport.AlreadyEnrolled ->
+                EnrollmentUiState.Success(result.token).also { pendingToken = null }
             is GatewayEnrollmentImport.Conflict -> {
                 // Keep [pendingToken] so the conflict dialog's explicit "replace" action can call
                 // confirmEnrollment(allowRotation = true) WITHOUT a re-scan. Clearing it here made
@@ -101,12 +108,15 @@ class EnrollmentController(
                 // could never be confirmed through the UI.
                 EnrollmentUiState.PendingConfirmation(
                     token = token,
-                    formattedFingerprint = com.example.relay.gateway.GatewayEnrollmentCodec.formatManualFingerprint(token.manifestFingerprint),
+                    formattedFingerprint = GatewayEnrollmentCodec.formatManualFingerprint(
+                        token.manifestFingerprint,
+                    ),
                     isConflict = true,
                     existingToken = result.existing,
                 )
             }
-            is GatewayEnrollmentImport.Rejected -> EnrollmentUiState.Error("Rejected: ${result.reason.name}").also { pendingToken = null }
+            is GatewayEnrollmentImport.Rejected ->
+                EnrollmentUiState.Error("Rejected: ${result.reason.name}").also { pendingToken = null }
         }
     }
 

@@ -30,6 +30,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 
+/** Analysis resolution previewed to the operator; kept modest for low-end disaster devices. */
+private const val QR_ANALYSIS_WIDTH = 1280
+private const val QR_ANALYSIS_HEIGHT = 720
+private val QR_ANALYSIS_RESOLUTION = Size(QR_ANALYSIS_WIDTH, QR_ANALYSIS_HEIGHT)
+
 /**
  * CameraX-based QR code scanner composable.
  *
@@ -62,51 +67,10 @@ fun CameraQrScanner(
     // Bind exactly once per composition. Binding inside AndroidView's update lambda
     // re-ran unbindAll()+bind on every recomposition, visibly churning the camera.
     LaunchedEffect(Unit) {
-        val resolved: ProcessCameraProvider? = suspendCancellableCoroutine { continuation ->
-            val future = ProcessCameraProvider.getInstance(context)
-            future.addListener(
-                {
-                    val provider = try {
-                        future.get()
-                    } catch (_: Exception) {
-                        // Initialization failed (no camera, policy, etc.); leave the view blank.
-                        null
-                    }
-                    if (continuation.isActive) continuation.resume(provider)
-                },
-                ContextCompat.getMainExecutor(context),
-            )
-        }
-        val cameraProvider = resolved ?: return@LaunchedEffect
-
-        val reader = MultiFormatReader().apply {
-            setHints(mapOf(
-                DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
-                DecodeHintType.TRY_HARDER to true,
-            ))
-        }
-
-        val preview = Preview.Builder().build().also {
-            it.surfaceProvider = previewView.surfaceProvider
-        }
-        val imageAnalysis = ImageAnalysis.Builder()
-            .setTargetResolution(Size(1280, 720))
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-            .build()
-            .also { analysis ->
-                analysis.setAnalyzer(executor) { imageProxy ->
-                    processImage(imageProxy, reader, delivered, onQrDetected)
-                }
-            }
-
-        runCatching {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                imageAnalysis,
-            )
+        val cameraProvider = awaitCameraProvider(context) ?: return@LaunchedEffect
+        val reader = createQrReader()
+        bindQrCamera(cameraProvider, lifecycleOwner, previewView, executor) { imageProxy ->
+            processImage(imageProxy, reader, delivered, onQrDetected)
         }
     }
 
@@ -116,6 +80,58 @@ fun CameraQrScanner(
             modifier = Modifier.fillMaxSize(),
         )
     }
+}
+
+/** Resolves the CameraX provider; null means initialization failed and the view stays blank. */
+private suspend fun awaitCameraProvider(context: android.content.Context): ProcessCameraProvider? =
+    suspendCancellableCoroutine { continuation ->
+        val future = ProcessCameraProvider.getInstance(context)
+        future.addListener(
+            {
+                val provider = try {
+                    future.get()
+                } catch (_: Exception) {
+                    // Initialization failed (no camera, policy, etc.); leave the view blank.
+                    null
+                }
+                if (continuation.isActive) continuation.resume(provider)
+            },
+            ContextCompat.getMainExecutor(context),
+        )
+    }
+
+private fun bindQrCamera(
+    cameraProvider: ProcessCameraProvider,
+    lifecycleOwner: androidx.lifecycle.LifecycleOwner,
+    previewView: PreviewView,
+    executor: java.util.concurrent.Executor,
+    onFrame: ImageAnalysis.Analyzer,
+) {
+    val preview = Preview.Builder().build().also {
+        it.surfaceProvider = previewView.surfaceProvider
+    }
+    val imageAnalysis = ImageAnalysis.Builder()
+        .setTargetResolution(QR_ANALYSIS_RESOLUTION)
+        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+        .build()
+        .also { analysis -> analysis.setAnalyzer(executor, onFrame) }
+    runCatching {
+        cameraProvider.unbindAll()
+        cameraProvider.bindToLifecycle(
+            lifecycleOwner,
+            CameraSelector.DEFAULT_BACK_CAMERA,
+            preview,
+            imageAnalysis,
+        )
+    }
+}
+
+/** Single reader reused across frames; ZXing readers are stateful and not thread-safe. */
+private fun createQrReader(): MultiFormatReader = MultiFormatReader().apply {
+    setHints(mapOf(
+        DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+        DecodeHintType.TRY_HARDER to true,
+    ))
 }
 
 @androidx.annotation.OptIn(ExperimentalGetImage::class)

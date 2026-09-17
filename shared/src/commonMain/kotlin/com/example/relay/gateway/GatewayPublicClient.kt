@@ -41,12 +41,16 @@ class GatewayPublicClient(
             messages = messages.map { it.toGatewayMessage(json) },
         )
         val response: HttpResponse = httpClient.post(
-            "http://${gateway.host}:${gateway.port}/api/public/sync/messages",
+            "${gateway.baseUrl()}/api/public/sync/messages",
         ) {
             contentType(ContentType.Application.Json)
             setBody(json.encodeToString(SyncMessagesRequest.serializer(), request))
         }
         val text: String = response.body()
+        // Match the Android client: an error body must not be reported as a transport success.
+        if (response.status.value !in 200..299) {
+            throw IllegalStateException("gateway HTTP ${response.status.value}")
+        }
         return json.decodeFromString(SyncMessagesResponse.serializer(), text)
     }
 
@@ -62,6 +66,20 @@ class GatewayPublicClient(
 }
 
 expect fun defaultHttpClient(): HttpClient
+
+/**
+ * Builds the LAN ingress URL from the advertised identity.
+ *
+ * [DiscoveredGateway.scheme] is part of the enrolled identity and is compared during trust
+ * decisions, so it must also be honoured on the wire: hardcoding `http` would talk cleartext to a
+ * gateway that was enrolled as `https`, contradicting the Android client implementation of the
+ * same contract.
+ */
+private fun DiscoveredGateway.baseUrl(): String {
+    val resolved = scheme.trim().lowercase().ifBlank { "http" }
+    require(resolved == "http" || resolved == "https") { "unsupported gateway scheme" }
+    return "$resolved://$host:$port"
+}
 
 private fun RelayMessage.toGatewayMessage(json: Json): GatewayMessage = GatewayMessage(
     messageId = messageId,

@@ -88,7 +88,21 @@ class NearbyConnectionsTransport(
             fail("start", "required Nearby permissions are missing")
             return
         }
-        eventJob = scope.launch(start = CoroutineStart.UNDISPATCHED) { platform.events.collect(::handlePlatformEvent) }
+        eventJob = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            platform.events.collect { event ->
+                // One failing Play services callback must not cancel the collector: that would
+                // silently stop discovery, connection and payload handling while
+                // `_state.value.started` stayed true and the UI kept reporting a live transport.
+                // Cancellation is still propagated so stop() remains prompt.
+                try {
+                    handlePlatformEvent(event)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (error: Exception) {
+                    fail("events", error.safeReason())
+                }
+            }
+        }
         try {
             platform.startAdvertising(localDeviceId)
             _state.update { it.copy(started = true, advertising = true) }

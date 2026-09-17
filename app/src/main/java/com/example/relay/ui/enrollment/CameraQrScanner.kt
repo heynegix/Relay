@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,6 +26,9 @@ import com.google.zxing.MultiFormatReader
 import com.google.zxing.PlanarYUVLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.resume
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * CameraX-based QR code scanner composable.
@@ -45,6 +49,9 @@ fun CameraQrScanner(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val executor = remember { Executors.newSingleThreadExecutor() }
+    // Stops consecutive decoded frames from re-delivering the same code before the
+    // caller closes the camera. A fresh composition gets a fresh gate.
+    val delivered = remember { AtomicBoolean(false) }
 
     val previewView = remember { PreviewView(context) }
 
@@ -52,47 +59,62 @@ fun CameraQrScanner(
         onDispose { executor.shutdown() }
     }
 
+    // Bind exactly once per composition. Binding inside AndroidView's update lambda
+    // re-ran unbindAll()+bind on every recomposition, visibly churning the camera.
+    LaunchedEffect(Unit) {
+        val resolved: ProcessCameraProvider? = suspendCancellableCoroutine { continuation ->
+            val future = ProcessCameraProvider.getInstance(context)
+            future.addListener(
+                {
+                    val provider = try {
+                        future.get()
+                    } catch (_: Exception) {
+                        // Initialization failed (no camera, policy, etc.); leave the view blank.
+                        null
+                    }
+                    if (continuation.isActive) continuation.resume(provider)
+                },
+                ContextCompat.getMainExecutor(context),
+            )
+        }
+        val cameraProvider = resolved ?: return@LaunchedEffect
+
+        val reader = MultiFormatReader().apply {
+            setHints(mapOf(
+                DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
+                DecodeHintType.TRY_HARDER to true,
+            ))
+        }
+
+        val preview = Preview.Builder().build().also {
+            it.surfaceProvider = previewView.surfaceProvider
+        }
+        val imageAnalysis = ImageAnalysis.Builder()
+            .setTargetResolution(Size(1280, 720))
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            .build()
+            .also { analysis ->
+                analysis.setAnalyzer(executor) { imageProxy ->
+                    processImage(imageProxy, reader, delivered, onQrDetected)
+                }
+            }
+
+        runCatching {
+            cameraProvider.unbindAll()
+            cameraProvider.bindToLifecycle(
+                lifecycleOwner,
+                CameraSelector.DEFAULT_BACK_CAMERA,
+                preview,
+                imageAnalysis,
+            )
+        }
+    }
+
     Box(modifier = modifier.fillMaxSize()) {
         AndroidView(
             factory = { previewView },
             modifier = Modifier.fillMaxSize(),
-        ) { view ->
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-            cameraProviderFuture.addListener({
-                val cameraProvider = runCatching { cameraProviderFuture.get() }.getOrNull() ?: return@addListener
-
-                val preview = Preview.Builder().build().also {
-                    it.surfaceProvider = view.surfaceProvider
-                }
-
-                val reader = MultiFormatReader().apply {
-                    setHints(mapOf(
-                        DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE),
-                        DecodeHintType.TRY_HARDER to true,
-                    ))
-                }
-
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setTargetResolution(Size(1280, 720))
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-                    .also { analysis ->
-                        analysis.setAnalyzer(executor) { imageProxy ->
-                            processImage(imageProxy, reader, onQrDetected)
-                        }
-                    }
-
-                runCatching {
-                    cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(
-                        lifecycleOwner,
-                        CameraSelector.DEFAULT_BACK_CAMERA,
-                        preview,
-                        imageAnalysis,
-                    )
-                }
-            }, ContextCompat.getMainExecutor(context))
-        }
+        )
     }
 }
 
@@ -100,27 +122,45 @@ fun CameraQrScanner(
 private fun processImage(
     imageProxy: ImageProxy,
     reader: MultiFormatReader,
+    delivered: AtomicBoolean,
     onQrDetected: (String) -> Unit,
 ) {
     try {
         val image = imageProxy.image ?: return
-        val buffer = image.planes[0].buffer
-        val bytes = ByteArray(buffer.remaining())
-        buffer.get(bytes)
+        val plane = image.planes[0]
+        if (plane.pixelStride != 1) return
+        val buffer = plane.buffer
+        val data = ByteArray(buffer.remaining())
+        buffer.get(data)
 
-        val source = PlanarYUVLuminanceSource(
-            bytes,
-            image.width,
-            image.height,
-            0, 0,
-            image.width,
-            image.height,
-            false,
-        )
+        // Many camera providers pad rows (rowStride > width). Handing ZXing a width-based
+        // stride on such devices shifts every row and makes codes undecodable; passing the
+        // real stride as dataWidth keeps rows aligned (ZXing crops to width itself).
+        val source = if (plane.rowStride > image.width && data.size >= plane.rowStride * image.height) {
+            PlanarYUVLuminanceSource(
+                data,
+                plane.rowStride,
+                image.height,
+                0, 0,
+                image.width,
+                image.height,
+                false,
+            )
+        } else {
+            PlanarYUVLuminanceSource(
+                data,
+                image.width,
+                image.height,
+                0, 0,
+                image.width,
+                image.height,
+                false,
+            )
+        }
         val bitmap = BinaryBitmap(HybridBinarizer(source))
         val result = reader.decodeWithState(bitmap)
         val text = result.text
-        if (!text.isNullOrBlank()) {
+        if (!text.isNullOrBlank() && delivered.compareAndSet(false, true)) {
             onQrDetected(text)
         }
     } catch (_: Exception) {

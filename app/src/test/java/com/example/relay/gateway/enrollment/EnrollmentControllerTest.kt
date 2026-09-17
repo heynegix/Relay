@@ -168,6 +168,49 @@ class EnrollmentControllerTest {
     }
 
     @Test
+    fun `conflict then explicit rotation completes without re-scanning`() {
+        // Regression: the first confirmEnrollment(allowRotation = false) used to clear the
+        // pending token, so the conflict dialog's "replace" action failed with
+        // "No pending enrollment" and a gateway key rotation could never complete.
+        val storage = FakeStorage()
+        val store = PersistentGatewayEnrollmentStore(storage)
+        store.enroll(token())
+        val controller = EnrollmentController(store)
+
+        val rotated = token(manifestFingerprint = otherFingerprint)
+        val payload = GatewayEnrollmentCodec.encodeQrPayload(rotated)
+        controller.processPayload(payload)
+
+        val first = controller.confirmEnrollment(allowRotation = false)
+        assertTrue(first is EnrollmentUiState.PendingConfirmation)
+        assertTrue((first as EnrollmentUiState.PendingConfirmation).isConflict)
+        assertEquals(fingerprint, store.enrolledTokens().single().manifestFingerprint)
+
+        val second = controller.confirmEnrollment(allowRotation = true)
+        assertTrue(second is EnrollmentUiState.Success)
+        assertTrue((second as EnrollmentUiState.Success).wasRotation)
+        assertEquals(otherFingerprint, store.enrolledTokens().single().manifestFingerprint)
+    }
+
+    @Test
+    fun `conflict then cancel keeps original identity`() {
+        val storage = FakeStorage()
+        val store = PersistentGatewayEnrollmentStore(storage)
+        store.enroll(token())
+        val controller = EnrollmentController(store)
+
+        val rotated = token(manifestFingerprint = otherFingerprint)
+        controller.processPayload(GatewayEnrollmentCodec.encodeQrPayload(rotated))
+
+        val conflict = controller.confirmEnrollment(allowRotation = false)
+        assertTrue(conflict is EnrollmentUiState.PendingConfirmation)
+
+        controller.cancel()
+        assertTrue(controller.confirmEnrollment(allowRotation = true) is EnrollmentUiState.Error)
+        assertEquals(fingerprint, store.enrolledTokens().single().manifestFingerprint)
+    }
+
+    @Test
     fun `enrolledGateways returns current list`() {
         val storage = FakeStorage()
         val store = PersistentGatewayEnrollmentStore(storage)

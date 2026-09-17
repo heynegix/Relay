@@ -89,19 +89,24 @@ class EnrollmentController(
      */
     fun confirmEnrollment(allowRotation: Boolean = false): EnrollmentUiState {
         val token = pendingToken ?: return EnrollmentUiState.Error("No pending enrollment")
-        pendingToken = null
 
         return when (val result = store.enroll(token, allowRotation)) {
-            is GatewayEnrollmentImport.Added -> EnrollmentUiState.Success(result.token)
-            is GatewayEnrollmentImport.Rotated -> EnrollmentUiState.Success(result.token, wasRotation = true)
-            is GatewayEnrollmentImport.AlreadyEnrolled -> EnrollmentUiState.Success(result.token)
-            is GatewayEnrollmentImport.Conflict -> EnrollmentUiState.PendingConfirmation(
-                token = token,
-                formattedFingerprint = com.example.relay.gateway.GatewayEnrollmentCodec.formatManualFingerprint(token.manifestFingerprint),
-                isConflict = true,
-                existingToken = result.existing,
-            )
-            is GatewayEnrollmentImport.Rejected -> EnrollmentUiState.Error("Rejected: ${result.reason.name}")
+            is GatewayEnrollmentImport.Added -> EnrollmentUiState.Success(result.token).also { pendingToken = null }
+            is GatewayEnrollmentImport.Rotated -> EnrollmentUiState.Success(result.token, wasRotation = true).also { pendingToken = null }
+            is GatewayEnrollmentImport.AlreadyEnrolled -> EnrollmentUiState.Success(result.token).also { pendingToken = null }
+            is GatewayEnrollmentImport.Conflict -> {
+                // Keep [pendingToken] so the conflict dialog's explicit "replace" action can call
+                // confirmEnrollment(allowRotation = true) WITHOUT a re-scan. Clearing it here made
+                // the second stage fail with "No pending enrollment", so a gateway key rotation
+                // could never be confirmed through the UI.
+                EnrollmentUiState.PendingConfirmation(
+                    token = token,
+                    formattedFingerprint = com.example.relay.gateway.GatewayEnrollmentCodec.formatManualFingerprint(token.manifestFingerprint),
+                    isConflict = true,
+                    existingToken = result.existing,
+                )
+            }
+            is GatewayEnrollmentImport.Rejected -> EnrollmentUiState.Error("Rejected: ${result.reason.name}").also { pendingToken = null }
         }
     }
 

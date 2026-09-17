@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620" role="img" aria-labelledby="title desc">
+  <title id="title">Relay at a glance</title>
+  <desc id="desc">A three-column overview explaining why Relay exists, how store-carry-forward works, and which validation stages are complete or still pending.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06111F"/>
+      <stop offset="0.58" stop-color="#10283D"/>
+      <stop offset="1" stop-color="#083B43"/>
+    </linearGradient>
+    <style>
+      .hero { font: 800 44px Inter, Segoe UI, Arial, sans-serif; fill: #F8FAFC; letter-spacing: 4px; }
+      .sub { font: 600 18px Inter, Segoe UI, Arial, sans-serif; fill: #BAE6FD; letter-spacing: 1px; }
+      .eyebrow { font: 800 17px Inter, Segoe UI, Arial, sans-serif; fill: #67E8F9; letter-spacing: 1.5px; }
+      .headline { font: 800 27px Inter, Segoe UI, Arial, sans-serif; fill: #F8FAFC; }
+      .body { font: 500 16px Inter, Segoe UI, Arial, sans-serif; fill: #CBD5E1; }
+      .label { font: 700 12px Inter, Segoe UI, Arial, sans-serif; fill: #DBEAFE; letter-spacing: 1px; }
+      .status { font: 800 18px Inter, Segoe UI, Arial, sans-serif; fill: #F8FAFC; }
+      .mark { font: 900 28px Inter, Segoe UI, Arial, sans-serif; }
+      .footer { font: 700 13px Inter, Segoe UI, Arial, sans-serif; fill: #94A3B8; letter-spacing: .8px; }
+    </style>
+  </defs>
+
+  <rect width="1200" height="620" rx="34" fill="url(#bg)"/>
+  <circle cx="1100" cy="70" r="180" fill="#22D3EE" opacity=".045"/>
+  <circle cx="80" cy="610" r="210" fill="#FB7185" opacity=".035"/>
+
+  <text x="55" y="68" class="hero">RELAY — AT A GLANCE</text>
+  <text x="57" y="104" class="sub">LOCAL-FIRST DISASTER INFORMATION RELAY • STORE • CARRY • FORWARD</text>
+
+  <g transform="translate(55 140)">
+    <rect width="335" height="370" rx="24" fill="#0A2135" stroke="#38BDF8" stroke-width="2"/>
+    <text x="24" y="43" class="eyebrow">WHY</text>
+    <text x="24" y="91" class="headline">Networks can fail.</text>
+    <text x="24" y="124" class="body">Internet access may disappear,</text>
+    <text x="24" y="149" class="body">become congested, or return only</text>
+    <text x="24" y="174" class="body">for short and unreliable moments.</text>
+    <path d="M24 202H305" stroke="#334155"/>
+    <text x="24" y="247" class="headline">Data can still move.</text>
+    <text x="24" y="280" class="body">A device stores information.</text>
+    <text x="24" y="305" class="body">A person carries the device.</text>
+    <text x="24" y="330" class="body">The next contact forwards it.</text>
+  </g>
+
+  <g transform="translate(432 140)">
+    <rect width="335" height="370" rx="24" fill="#092537" stroke="#34D399" stroke-width="2"/>
+    <text x="24" y="43" class="eyebrow">HOW</text>
+    <text x="24" y="91" class="headline">CREATE → STORE</text>
+    <text x="24" y="132" class="headline">CARRY → FORWARD</text>
+    <path d="M24 160H305" stroke="#334155"/>
+    <text x="24" y="202" class="status">ORDINARY REPORTS</text>
+    <text x="24" y="231" class="body">Nearby differential sync</text>
+    <text x="24" y="256" class="body">+ PC Gateway storage receipts</text>
+    <text x="24" y="301" class="status">RESCUE REQUESTS</text>
+    <text x="24" y="330" class="body">Encrypted envelope</text>
+    <text x="24" y="355" class="body">+ signed shelter receipt</text>
+  </g>
+
+  <g transform="translate(809 140)">
+    <rect width="335" height="370" rx="24" fill="#241C28" stroke="#FB7185" stroke-width="2"/>
+    <text x="24" y="43" class="eyebrow">CURRENT</text>
+    <text x="24" y="88" class="status">IMPLEMENTATION</text>
+    <text x="278" y="91" class="mark" fill="#4ADE80">✓</text>
+    <text x="24" y="115" class="body">Android, Gateway, crypto lanes</text>
+    <text x="24" y="160" class="status">HOST CONTRACTS</text>
+    <text x="278" y="163" class="mark" fill="#4ADE80">✓</text>
+    <text x="24" y="187" class="body">Deterministic checks available</text>
+    <text x="24" y="232" class="status">ANDROID / RF E2E</text>
+    <text x="278" y="235" class="mark" fill="#FBBF24">△</text>
+    <text x="24" y="259" class="body">Physical multi-device work remains</text>
+    <text x="24" y="304" class="status">SECURITY EVIDENCE</text>
+    <text x="278" y="307" class="mark" fill="#FBBF24">△</text>
+    <text x="24" y="331" class="body">Missing tools are BLOCKED, not PASS</text>
+  </g>
+
+  <g transform="translate(55 535)">
+    <rect width="155" height="34" rx="17" fill="#0E7490"/><text x="25" y="22" class="label">LOCAL-FIRST</text>
+    <rect x="170" width="165" height="34" rx="17" fill="#1E3A5F"/><text x="198" y="22" class="label">NO AI REQUIRED</text>
+    <rect x="350" width="196" height="34" rx="17" fill="#7C2D12"/><text x="376" y="22" class="label">ACTIVE DEVELOPMENT</text>
+  </g>
+
+  <text x="650" y="558" class="footer">STORED ≠ IDENTITY VERIFIED ≠ CONTENT VERIFIED ≠ FINAL DELIVERY</text>
+  <text x="55" y="596" class="footer">NOT A REPLACEMENT FOR EMERGENCY SERVICES OR CERTIFIED LIFE-SAFETY SYSTEMS</text>
+</svg>

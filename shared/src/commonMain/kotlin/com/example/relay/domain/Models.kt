@@ -130,7 +130,7 @@ fun deliveryPresentationLabel(presentation: DeliveryPresentation): String = when
 
 fun SafetyState.labelJa(): String = when (this) {
     SafetyState.SAFE -> "無事"
-    SafetyState.INJURED -> "けがあり"
+    SafetyState.INJURED -> "けががあり"
     SafetyState.EVACUATING -> "避難中"
     SafetyState.AT_SHELTER -> "避難所に到着"
 }

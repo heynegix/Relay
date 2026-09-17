@@ -7,9 +7,16 @@
   endpoints), this script:
   1. Builds installDist for both :broker and :pc-gateway
   2. Starts each as a separate OS process
-  3. Exercises a real flow: credential -> manifest -> envelope -> receipt
+  3. Fetches the real public rescue manifest from the Gateway distribution
+  4. Requires the real Broker upload route to reject a malformed upload with 400
 
   This is a REAL black-box test using actual distribution artifacts.
+
+  Coverage boundary: the assertions below are reachability, manifest-shape and
+  malformed-input rejection. This script does NOT prove valid encrypted
+  end-to-end delivery or a signed shelter receipt; those require a real
+  RSA-OAEP/ECDSA envelope and are covered by the JVM integration tests
+  (BrokerGatewayLoadAndFaultInjectionTest, EmulatorBrokerGatewayReceiptE2ETest).
 
   Exit codes:
     0 = PASS
@@ -189,14 +196,16 @@ try {
     # --- Step 5: Fetch manifest ---
     Write-Host "[4/8] Fetching rescue manifest..."
     try {
-        $manifestResp = Invoke-WebRequest -Uri "http://127.0.0.1:$GatewayPort/api/public/manifest" -TimeoutSec 10
+        # The public rescue manifest is served at this exact path. A previous revision of this
+        # script used /api/public/manifest, which is not a route, so the check could never pass.
+        $manifestResp = Invoke-WebRequest -Uri "http://127.0.0.1:$GatewayPort/api/public/rescue/manifest" -TimeoutSec 10
         if ($manifestResp.StatusCode -eq 200 -and $manifestResp.Content.Length -gt 10) {
             $manifestJson = $manifestResp.Content | ConvertFrom-Json
-            $hasPublicKey = [bool]($manifestJson.recipientPublicKey -or $manifestJson.publicKey)
-            if ($hasPublicKey) {
-                Add-Step 'manifest-fetch' 'PASS' 'Manifest contains public key'
+            $hasPublicKey = [bool]($manifestJson.recipientPublicKey.encodedBase64 -and $manifestJson.receiptSigningPublicKey.encodedBase64)
+            if ($hasPublicKey -and $manifestJson.shelterId) {
+                Add-Step 'manifest-fetch' 'PASS' 'Manifest carries recipient and receipt-signing public keys'
             } else {
-                Add-Step 'manifest-fetch' 'FAIL' 'Manifest response lacks public key'
+                Add-Step 'manifest-fetch' 'FAIL' 'Manifest response lacks a public key or shelter id'
                 $summary.status = 'FAIL'
                 throw 'Bad manifest'
             }
@@ -211,57 +220,47 @@ try {
         throw
     }
 
-    # --- Step 6: Test envelope submission (if Broker supports it) ---
-    Write-Host "[5/8] Testing envelope submission to Broker..."
+    # --- Step 6: Verify the Broker upload route exists and rejects malformed input ---
+    Write-Host "[5/8] Testing malformed upload rejection on the Broker..."
+    # A real EncryptedRescueEnvelope requires RSA-OAEP and ECDSA-P256 material that PowerShell
+    # cannot reproduce faithfully, so the black-box assertion here is the same one the CI heavy
+    # lane uses: the real route must exist and answer 400 for a structurally invalid upload.
+    $malformedUploadBody = '{}'
+    $uploadRoute = "http://127.0.0.1:$BrokerPort/v1/rescue/upload"
     try {
-        # Create a minimal test envelope (this tests the Broker's intake endpoint)
-        $testEnvelope = @{
-            envelopeId = [guid]::NewGuid().ToString()
-            shelterId = 'e2e-test-shelter'
-            encryptedPayload = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes('test-payload'))
-            originDeviceId = 'e2e-test-device'
-            timestamp = (Get-Date).ToString('o')
-        } | ConvertTo-Json
-
-        $envelopeResp = Invoke-WebRequest -Uri "http://127.0.0.1:$BrokerPort/v1/envelopes" `
-            -Method POST -Body $testEnvelope -ContentType 'application/json' -TimeoutSec 10 -ErrorAction Stop
-
-        if ($envelopeResp.StatusCode -in @(200, 201, 202)) {
-            Add-Step 'envelope-submit' 'PASS' "Status: $($envelopeResp.StatusCode)"
-        } else {
-            Add-Step 'envelope-submit' 'FAIL' "Unexpected status: $($envelopeResp.StatusCode)"
-        }
+        $uploadResp = Invoke-WebRequest -Uri $uploadRoute `
+            -Method POST -Body $malformedUploadBody -ContentType 'application/json' -TimeoutSec 10 -ErrorAction Stop
+        Add-Step 'upload-route-validation' 'FAIL' "Malformed upload was accepted (status $($uploadResp.StatusCode))"
     } catch {
-        # Some 4xx responses are expected if format doesn't match exactly
         $statusCode = $null
         if ($_.Exception.Response) { $statusCode = [int]$_.Exception.Response.StatusCode }
-        if ($statusCode -in @(400, 422)) {
-            Add-Step 'envelope-submit' 'INCONCLUSIVE' "Broker rejected test envelope (status $statusCode) - format may differ"
+        if ($statusCode -eq 400) {
+            Add-Step 'upload-route-validation' 'PASS' 'Malformed upload rejected (400)'
         } else {
-            Add-Step 'envelope-submit' 'FAIL' "Error: $($_.Exception.Message)"
+            Add-Step 'upload-route-validation' 'FAIL' "Expected 400, got $(if ($statusCode) { $statusCode } else { $_.Exception.Message })"
         }
     }
 
-    # --- Step 7: Test idempotency (re-submit same envelope) ---
-    Write-Host "[6/8] Testing idempotency..."
-    # This step depends on envelope-submit succeeding
-    $envelopeStep = $summary.steps | Where-Object { $_.name -eq 'envelope-submit' } | Select-Object -First 1
-    if ($envelopeStep -and $envelopeStep.status -eq 'PASS') {
+    # --- Step 7: Verify a rejected upload changes nothing reachable ---
+    Write-Host "[6/8] Re-testing the same malformed upload..."
+    # This step depends on upload-route-validation having passed.
+    $uploadStep = $summary.steps | Where-Object { $_.name -eq 'upload-route-validation' } | Select-Object -First 1
+    if ($uploadStep -and $uploadStep.status -eq 'PASS') {
         try {
-            $resubmitResp = Invoke-WebRequest -Uri "http://127.0.0.1:$BrokerPort/v1/envelopes" `
-                -Method POST -Body $testEnvelope -ContentType 'application/json' -TimeoutSec 10 -ErrorAction Stop
-            Add-Step 'idempotency' 'PASS' "Re-submit accepted (status $($resubmitResp.StatusCode))"
+            $resubmitResp = Invoke-WebRequest -Uri $uploadRoute `
+                -Method POST -Body $malformedUploadBody -ContentType 'application/json' -TimeoutSec 10 -ErrorAction Stop
+            Add-Step 'upload-repeatability' 'FAIL' "Repeat upload was accepted (status $($resubmitResp.StatusCode))"
         } catch {
             $statusCode = $null
             if ($_.Exception.Response) { $statusCode = [int]$_.Exception.Response.StatusCode }
-            if ($statusCode -eq 409) {
-                Add-Step 'idempotency' 'PASS' 'Duplicate correctly rejected (409)'
+            if ($statusCode -eq 400) {
+                Add-Step 'upload-repeatability' 'PASS' 'Same malformed upload still rejected (400)'
             } else {
-                Add-Step 'idempotency' 'INCONCLUSIVE' "Unexpected: $($_.Exception.Message)"
+                Add-Step 'upload-repeatability' 'FAIL' "Expected 400, got $(if ($statusCode) { $statusCode } else { $_.Exception.Message })"
             }
         }
     } else {
-        Add-Step 'idempotency' 'NOT_RUN' 'Skipped (envelope-submit did not pass)'
+        Add-Step 'upload-repeatability' 'NOT_RUN' 'Skipped (upload-route-validation did not pass)'
     }
 
     # --- Step 8: Verify Broker health still OK ---

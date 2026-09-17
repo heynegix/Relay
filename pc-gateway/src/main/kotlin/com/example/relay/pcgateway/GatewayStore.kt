@@ -14,13 +14,26 @@ import java.util.Base64
 import java.util.UUID
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 private const val ROUTE_AUTHENTICATED_BRIDGE = "AUTHENTICATED_BRIDGE"
 private const val ROUTE_ANONYMOUS_LAN = "ANONYMOUS_LAN"
 private const val CONTENT_UNVERIFIED = "UNVERIFIED"
 private const val CONTENT_SIGNED_UNVERIFIED = "SIGNED_UNVERIFIED"
+
+/**
+ * Value written to the retired legacy `ingress_trust` column on every new row.
+ *
+ * The column used to describe transport-Bridge authentication, which now lives in
+ * `route_authentication`; startup normalises every existing row to this value and the
+ * authenticated-bridge UPDATE path hardcodes it. Legacy JSON clients still read it as
+ * `ingressTrust`, so the INSERT must write the same conservative value instead of echoing
+ * `content_verification` (whose newer `SIGNED_UNVERIFIED` value those clients do not understand).
+ */
+private const val LEGACY_INGRESS_TRUST = "UNVERIFIED"
 private const val PAIRING_CODE_MIN = 100000
 private const val PAIRING_CODE_MAX = 999999
 
@@ -30,6 +43,19 @@ data class StoreOutcome(
     val receipt: GatewayReceipt? = null,
     val reason: String? = null,
 )
+
+/**
+ * Total accessor for a STATUS_CHANGE payload field.
+ *
+ * `JsonElement.jsonObject`/`jsonPrimitive` throw [IllegalArgumentException] for the wrong JSON
+ * shape, and an unauthenticated sender can deliver `payload: 7`, `payload: []`, or `payload: null`.
+ * Because a single record is persisted inside one batch transaction, letting that escape would roll
+ * back every other message in the same request, so every field is read through this accessor and a
+ * malformed record is rejected on its own instead.
+ */
+private fun JsonElement?.statusChangeField(name: String): String? =
+    ((this as? JsonObject)?.get(name) as? JsonPrimitive)?.takeIf { it.isString }?.content
+
 @kotlinx.serialization.Serializable
 data class BridgeSummary(
     val bridgeId: String,
@@ -448,9 +474,9 @@ class GatewayStore(private val config: GatewayConfig, private val json: Json = G
             return StoreOutcome(message.messageId, "REJECTED", reason = "invalid_hop")
         }
         if (message.recordType == "STATUS_CHANGE") {
-            val target = message.payload.jsonObject["targetMessageId"]?.jsonPrimitive?.content
+            val target = message.payload.statusChangeField("targetMessageId")
                 ?: return StoreOutcome(message.messageId, "REJECTED", reason = "invalid_status_change")
-            val newStatus = message.payload.jsonObject["newStatus"]?.jsonPrimitive?.content
+            val newStatus = message.payload.statusChangeField("newStatus")
                 ?: return StoreOutcome(message.messageId, "REJECTED", reason = "invalid_status_change")
             if (newStatus !in setOf("ACTIVE", "RESOLVED", "RETRACTED")) {
                 return StoreOutcome(message.messageId, "REJECTED", reason = "invalid_status_change")
@@ -545,7 +571,7 @@ class GatewayStore(private val config: GatewayConfig, private val json: Json = G
             ps.setInt(12, message.hopLimit)
             ps.setString(13, message.originDeviceId)
             ps.setLong(14, message.receivedAt)
-            ps.setString(15, contentVerification)
+            ps.setString(15, LEGACY_INGRESS_TRUST)
             ps.setString(16, routeAuthentication)
             ps.setString(17, contentVerification)
             ps.setString(18, sourceBridgeId)
@@ -558,8 +584,11 @@ class GatewayStore(private val config: GatewayConfig, private val json: Json = G
     }
 
     private fun applyStatusChange(message: GatewayMessage) {
-        val target = message.payload.jsonObject["targetMessageId"]!!.jsonPrimitive.content
-        val newStatus = message.payload.jsonObject["newStatus"]!!.jsonPrimitive.content
+        // Both fields were validated by the caller; re-reading them through the total accessor
+        // keeps this function from throwing out of the enclosing batch transaction if it is ever
+        // reached with a payload shape the validator did not see.
+        val target = message.payload.statusChangeField("targetMessageId") ?: return
+        val newStatus = message.payload.statusChangeField("newStatus") ?: return
         // Store-carry-forward can deliver events out of order. Apply only the
         // newest event; messageId is a deterministic tie-breaker for equal clocks.
         connection.prepareStatement(
